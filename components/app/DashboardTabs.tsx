@@ -10,8 +10,10 @@ import { JobTable } from '@/components/app/JobTable';
 import { ArchivedJobsTable } from '@/components/app/ArchivedJobsTable';
 import { JobModal } from '@/components/app/JobModal';
 import { ExportButton } from '@/components/app/ExportButton';
+import { JobCardList } from '@/components/app/JobCardList';
 import { Button } from '@/components/ui/button';
 import type { Job, Status, Platform, Reminder } from '@/lib/types';
+import { useJobStore } from '@/store/jobStore';
 
 interface DashboardTabsProps {
   initialJobs: Job[];
@@ -61,6 +63,8 @@ export function DashboardTabs({
   const currentTab = searchParams.get('tab') ?? 'active';
 
   const [addOpen, setAddOpen] = useState(false);
+  const [editJob, setEditJob] = useState<Job | undefined>(undefined);
+  const { jobs } = useJobStore();
 
   function setTab(tab: string) {
     const params = new URLSearchParams(searchParams.toString());
@@ -81,7 +85,7 @@ export function DashboardTabs({
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold text-text-primary">Dashboard</h1>
         {currentTab === 'active' && (
-          <div className="flex items-center gap-2">
+          <div className="hidden lg:flex items-center gap-2">
             <ExportButton />
             <Button onClick={() => setAddOpen(true)}>
               <PlusIcon className="mr-2 h-4 w-4" aria-hidden="true" />
@@ -101,21 +105,51 @@ export function DashboardTabs({
       </div>
 
       {currentTab === 'active' ? (
-        <JobTable
-          initialJobs={initialJobs}
-          initialStatuses={initialStatuses}
-          initialPlatforms={initialPlatforms}
-          initialReminders={initialReminders}
-          userId={userId}
-          addOpen={addOpen}
-          onAddOpenChange={setAddOpen}
-        />
+        <>
+          <div className="hidden lg:block">
+            <JobTable
+              initialJobs={initialJobs}
+              initialStatuses={initialStatuses}
+              initialPlatforms={initialPlatforms}
+              initialReminders={initialReminders}
+              userId={userId}
+              addOpen={addOpen}
+              onAddOpenChange={setAddOpen}
+            />
+          </div>
+          <div className="lg:hidden">
+            <JobCardList
+              jobs={jobs.length > 0 ? jobs : initialJobs}
+              statuses={initialStatuses}
+              reminders={initialReminders}
+              onEdit={(job) => {
+                setEditJob(job);
+              }}
+            />
+          </div>
+        </>
       ) : (
         <ArchivedJobsTable />
       )}
 
-      {/* Add Job modal lives here so the tab header button can control it */}
+      {/* Add Job modal — controlled from header button or mobile FAB */}
       <JobModal open={addOpen} onOpenChange={setAddOpen} userId={userId} />
+      {/* Edit Job modal — triggered from mobile card context menu */}
+      {editJob && (
+        <JobModal open={!!editJob} onOpenChange={(open) => { if (!open) setEditJob(undefined); }} job={editJob} userId={userId} />
+      )}
+
+      {/* Mobile FAB */}
+      {currentTab === 'active' && (
+        <button
+          type="button"
+          onClick={() => setAddOpen(true)}
+          aria-label="Add job application"
+          className="fixed bottom-6 right-6 z-40 lg:hidden flex h-14 w-14 items-center justify-center rounded-full bg-brand-500 text-white shadow-lg hover:bg-brand-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 transition-colors"
+        >
+          <PlusIcon className="h-6 w-6" aria-hidden="true" />
+        </button>
+      )}
     </div>
   );
 }

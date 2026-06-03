@@ -40,3 +40,10 @@ export function relativeTime(dateStr: string): string {
 export function getResumeFilename(path: string): string {
   return path.split('/').pop() ?? path;
 }
+
+/**
+ * Returns the value or an em-dash for null/undefined/empty strings.
+ */
+export function displayValue(value: string | null | undefined): string {
+  return value || '\u2014';
+}

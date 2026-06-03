@@ -288,6 +288,10 @@ export function JobTable({
         onClearFilters={clearFilters}
       />
 
+      <p className="sr-only" aria-live="polite" aria-atomic="true">
+        {hasActiveFilters ? `${sortedJobs.length} job${sortedJobs.length !== 1 ? 's' : ''} found` : ''}
+      </p>
+
       {sortedJobs.length === 0 ? (
         <JobTableEmpty hasFilters={hasActiveFilters} onAddJob={() => onAddOpenChange(true)} onClearFilters={clearFilters} />
       ) : (
@@ -297,6 +301,7 @@ export function JobTable({
           style={shouldVirtualize ? { height: '600px' } : undefined}
         >
           <table className="w-full border-collapse text-sm" aria-label="Jobs table">
+            <caption className="sr-only">Job applications</caption>
             <thead className="sticky top-0 z-10 bg-surface-muted border-b border-border-app">
               <tr>
                 <th scope="col" className="w-10 px-3 py-2.5 text-center text-xs font-medium text-text-muted">

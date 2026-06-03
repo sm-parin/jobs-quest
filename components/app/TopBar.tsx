@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { NavLinks } from '@/components/app/AppSidebar';
+import { ThemeToggle } from '@/components/app/ThemeToggle';
 
 interface TopBarProps {
   user: Pick<User, 'id' | 'email'>;
@@ -39,6 +40,7 @@ export function TopBar({ user }: TopBarProps) {
         <span className="font-semibold text-text-primary">Jobs Quest</span>
       </div>
       <div className="flex-1" />
+      <ThemeToggle />
       <DropdownMenu>
         <DropdownMenuTrigger className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
           <Avatar className="h-8 w-8 cursor-pointer">

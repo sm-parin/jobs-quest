@@ -137,6 +137,7 @@ export function ArchivedJobsTable() {
       ) : (
         <div className="w-full overflow-auto rounded-lg border border-border-app bg-surface">
           <table className="w-full border-collapse text-sm" aria-label="Archived jobs">
+            <caption className="sr-only">Archived applications</caption>
             <thead className="sticky top-0 z-10 bg-surface-muted border-b border-border-app">
               <tr>
                 <th scope="col" className="min-w-[180px] px-3 py-2.5 text-left text-xs font-medium text-text-muted">Company</th>
