@@ -3,10 +3,6 @@ import { ImageResponse } from 'next/og';
 export const size = { width: 180, height: 180 };
 export const contentType = 'image/png';
 
-/**
- * Apple touch icon — 180x180 placeholder.
- * Replace with a real icon asset when branding is finalised.
- */
 export default function AppleIcon() {
   return new ImageResponse(
     (

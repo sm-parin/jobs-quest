@@ -1,20 +1,54 @@
 // ---------------------------------------------------------------------------
-// Database table shapes — match supabase/migrations/001_initial_schema.sql exactly.
+// Database table shapes — match migrations/001 + migrations/002 exactly.
 // All queries must select specific columns; never use select('*').
 // ---------------------------------------------------------------------------
 
 export type Priority = 'low' | 'medium' | 'high';
 
 // ---------------------------------------------------------------------------
+// platform_status_options
+// ---------------------------------------------------------------------------
+export interface PlatformStatusOption {
+  id: string;
+  user_id: string;
+  label: string;
+  order: number;
+  created_at: string;
+  updated_at: string;
+}
+
+// ---------------------------------------------------------------------------
+// platforms
+// ---------------------------------------------------------------------------
+export interface Platform {
+  id: string;
+  user_id: string;
+  name: string;
+  url: string | null;
+  profile_status_id: string | null;     // FK → platform_status_options.id
+  subscription_type: string | null;
+  login_email: string | null;
+  last_application_date: string | null; // ISO date — managed by DB trigger
+  personal_rating: number | null;       // 1-5
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+  // Joined relations (not DB columns)
+  profile_status?: PlatformStatusOption;
+  // Derived from query (not a DB column)
+  jobs_tracked?: number;
+}
+
+// ---------------------------------------------------------------------------
 // statuses
 // ---------------------------------------------------------------------------
 export interface Status {
-  id: string;             // uuid
-  user_id: string;        // uuid — auth.uid()
+  id: string;
+  user_id: string;
   label: string;
-  color: string;          // hex string e.g. "#60a5fa"
+  color: string;
   order: number;
-  created_at: string;     // ISO 8601
+  created_at: string;
   updated_at: string;
 }
 
@@ -29,21 +63,26 @@ export interface Job {
   location: string | null;
   url: string | null;
   source: string | null;
-  status_id: string | null;        // FK → statuses.id
+  source_platform_id: string | null;
+  status_id: string | null;
   priority: Priority;
   salary: string | null;
-  stage_date: string | null;       // ISO date
-  stage_date_label: string | null; // e.g. "Applied"
+  stage_date: string | null;
+  stage_date_label: string | null;
   notes: string | null;
-  resume_path: string | null;      // Supabase Storage path
+  resume_path: string | null;
   job_description: string | null;
   is_archived: boolean;
   created_at: string;
   updated_at: string;
+  // Joined relations (not DB columns)
+  status?: Pick<Status, 'id' | 'label' | 'color'>;
+  platform?: Pick<Platform, 'id' | 'name'>;
+  contacts?: Contact[];
 }
 
 // ---------------------------------------------------------------------------
-// contacts (point of contact per job)
+// contacts
 // ---------------------------------------------------------------------------
 export interface Contact {
   id: string;
@@ -64,7 +103,7 @@ export interface Reminder {
   id: string;
   job_id: string;
   user_id: string;
-  remind_at: string;   // ISO date
+  remind_at: string;
   is_done: boolean;
   created_at: string;
   updated_at: string;
@@ -79,40 +118,50 @@ export interface ActivityLog {
   user_id: string;
   old_status_label: string | null;
   new_status_label: string;
-  stage_date: string | null;  // ISO date
-  changed_at: string;         // ISO 8601 timestamptz
+  stage_date: string | null;
+  changed_at: string;
 }
 
 // ---------------------------------------------------------------------------
-// Supabase Database helper type (used with createClient<Database>)
+// Supabase Database helper type
 // ---------------------------------------------------------------------------
 export interface Database {
   public: {
     Tables: {
+      platform_status_options: {
+        Row: { id: string; user_id: string; label: string; order: number; created_at: string; updated_at: string };
+        Insert: { user_id: string; label: string; order: number };
+        Update: { label?: string; order?: number; updated_at?: string };
+      };
+      platforms: {
+        Row: { id: string; user_id: string; name: string; url: string | null; profile_status_id: string | null; subscription_type: string | null; login_email: string | null; last_application_date: string | null; personal_rating: number | null; notes: string | null; created_at: string; updated_at: string };
+        Insert: { user_id: string; name: string; url?: string | null; profile_status_id?: string | null; subscription_type?: string | null; login_email?: string | null; personal_rating?: number | null; notes?: string | null };
+        Update: { name?: string; url?: string | null; profile_status_id?: string | null; subscription_type?: string | null; login_email?: string | null; personal_rating?: number | null; notes?: string | null; updated_at?: string };
+      };
       statuses: {
-        Row: Status;
-        Insert: Omit<Status, 'id' | 'created_at' | 'updated_at'>;
-        Update: Partial<Omit<Status, 'id' | 'user_id' | 'created_at'>>;
+        Row: { id: string; user_id: string; label: string; color: string; order: number; created_at: string; updated_at: string };
+        Insert: { user_id: string; label: string; color: string; order: number };
+        Update: { label?: string; color?: string; order?: number; updated_at?: string };
       };
       jobs: {
-        Row: Job;
-        Insert: Omit<Job, 'id' | 'created_at' | 'updated_at'>;
-        Update: Partial<Omit<Job, 'id' | 'user_id' | 'created_at'>>;
+        Row: { id: string; user_id: string; company: string; role: string; location: string | null; url: string | null; source: string | null; source_platform_id: string | null; status_id: string | null; priority: Priority; salary: string | null; stage_date: string | null; stage_date_label: string | null; notes: string | null; resume_path: string | null; job_description: string | null; is_archived: boolean; created_at: string; updated_at: string };
+        Insert: { user_id: string; company: string; role: string; location?: string | null; url?: string | null; source?: string | null; source_platform_id?: string | null; status_id?: string | null; priority?: Priority; salary?: string | null; stage_date?: string | null; stage_date_label?: string | null; notes?: string | null; resume_path?: string | null; job_description?: string | null; is_archived?: boolean };
+        Update: { company?: string; role?: string; location?: string | null; url?: string | null; source?: string | null; source_platform_id?: string | null; status_id?: string | null; priority?: Priority; salary?: string | null; stage_date?: string | null; stage_date_label?: string | null; notes?: string | null; resume_path?: string | null; job_description?: string | null; is_archived?: boolean; updated_at?: string };
       };
       contacts: {
-        Row: Contact;
-        Insert: Omit<Contact, 'id' | 'created_at' | 'updated_at'>;
-        Update: Partial<Omit<Contact, 'id' | 'job_id' | 'user_id' | 'created_at'>>;
+        Row: { id: string; job_id: string; user_id: string; name: string; designation: string | null; email: string | null; phone: string | null; created_at: string; updated_at: string };
+        Insert: { job_id: string; user_id: string; name: string; designation?: string | null; email?: string | null; phone?: string | null };
+        Update: { name?: string; designation?: string | null; email?: string | null; phone?: string | null; updated_at?: string };
       };
       reminders: {
-        Row: Reminder;
-        Insert: Omit<Reminder, 'id' | 'created_at' | 'updated_at'>;
-        Update: Partial<Omit<Reminder, 'id' | 'job_id' | 'user_id' | 'created_at'>>;
+        Row: { id: string; job_id: string; user_id: string; remind_at: string; is_done: boolean; created_at: string; updated_at: string };
+        Insert: { job_id: string; user_id: string; remind_at: string; is_done?: boolean };
+        Update: { remind_at?: string; is_done?: boolean; updated_at?: string };
       };
       activity_log: {
-        Row: ActivityLog;
-        Insert: Omit<ActivityLog, 'id' | 'changed_at'>;
-        Update: Partial<Omit<ActivityLog, 'id' | 'job_id' | 'user_id' | 'changed_at'>>;
+        Row: { id: string; job_id: string; user_id: string; old_status_label: string | null; new_status_label: string; stage_date: string | null; changed_at: string };
+        Insert: { job_id: string; user_id: string; old_status_label?: string | null; new_status_label: string; stage_date?: string | null };
+        Update: Record<string, never>;
       };
     };
   };

@@ -3,10 +3,6 @@ import { ImageResponse } from 'next/og';
 export const size = { width: 32, height: 32 };
 export const contentType = 'image/png';
 
-/**
- * Favicon — 32x32 placeholder.
- * Replace with a real icon asset when branding is finalised.
- */
 export default function Icon() {
   return new ImageResponse(
     (

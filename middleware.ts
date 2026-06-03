@@ -2,11 +2,6 @@ import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 import type { Database } from '@/lib/types';
 
-/**
- * Refreshes the Supabase auth session on every request so tokens stay valid.
- * Protected routes redirect unauthenticated users to /login.
- * Must run before any route handler reads the session.
- */
 export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
 
@@ -31,33 +26,28 @@ export async function middleware(request: NextRequest) {
     },
   );
 
-  // Refresh session — must not call any supabase.auth getter before this
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
   const { pathname } = request.nextUrl;
 
-  // Routes that never require auth
   const isPublicRoute =
     pathname === '/' ||
     pathname.startsWith('/login') ||
     pathname.startsWith('/signup') ||
     pathname.startsWith('/auth/');
 
-  // Routes that always require auth
   const isProtectedRoute =
     pathname.startsWith('/dashboard') ||
     pathname.startsWith('/api/');
 
-  // Redirect unauthenticated users away from protected routes
   if (!user && isProtectedRoute) {
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = '/login';
     return NextResponse.redirect(redirectUrl);
   }
 
-  // Redirect authenticated users away from auth pages
   if (user && !isProtectedRoute && !isPublicRoute) {
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = '/dashboard';
@@ -75,12 +65,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    /*
-     * Match all paths except:
-     * - _next/static / _next/image (Next.js internals)
-     * - favicon.ico, sitemap.xml, robots.txt
-     * - Public assets
-     */
     '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 };

@@ -13,18 +13,15 @@ export default function manifest(): MetadataRoute.Manifest {
     categories: ['productivity', 'utilities'],
     icons: [
       {
-        src: '/icon',       // served by app/icon.tsx (favicon, 32x32)
+        src: '/icon',
         sizes: '32x32',
         type: 'image/png',
       },
       {
-        src: '/apple-icon', // served by app/apple-icon.tsx (180x180)
+        src: '/apple-icon',
         sizes: '180x180',
         type: 'image/png',
       },
-      // TODO Sprint 0 -> replace with real exported PNGs at these sizes:
-      // { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
-      // { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
     ],
   };
 }

@@ -1,11 +1,5 @@
 import { cn } from '@/lib/utils';
 
-// ---------------------------------------------------------------------------
-// Skeleton — matches the shape of real content; never a generic spinner.
-// Usage:  <Skeleton className="h-4 w-32" />
-//         <Skeleton variant="avatar" />
-// ---------------------------------------------------------------------------
-
 interface SkeletonProps {
   className?: string;
   variant?: 'default' | 'avatar' | 'badge';

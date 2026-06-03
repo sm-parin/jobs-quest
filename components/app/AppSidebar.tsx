@@ -2,18 +2,18 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { BriefcaseIcon, ArchiveIcon, SettingsIcon } from 'lucide-react';
+import { BriefcaseIcon, ArchiveIcon, SettingsIcon, LayoutGridIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const NAV_ITEMS = [
   { href: '/dashboard', label: 'Dashboard', icon: BriefcaseIcon },
+  { href: '/dashboard/platforms', label: 'Platforms', icon: LayoutGridIcon },
   { href: '/dashboard/archived', label: 'Archived', icon: ArchiveIcon },
   { href: '/dashboard/settings', label: 'Settings', icon: SettingsIcon },
 ] as const;
 
 export function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
-
   return (
     <nav aria-label="Main navigation">
       <ul className="space-y-1">
@@ -21,17 +21,9 @@ export function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
           const isActive = pathname === href || (href !== '/dashboard' && pathname.startsWith(href));
           return (
             <li key={href}>
-              <Link
-                href={href}
-                onClick={onNavigate}
-                aria-current={isActive ? 'page' : undefined}
-                className={cn(
-                  'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
-                  isActive
-                    ? 'bg-brand-50 text-brand-500'
-                    : 'text-text-muted hover:bg-surface-muted hover:text-text-primary',
-                )}
-              >
+              <Link href={href} onClick={onNavigate} aria-current={isActive ? 'page' : undefined}
+                className={cn('flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+                  isActive ? 'bg-brand-50 text-brand-500' : 'text-text-muted hover:bg-surface-muted hover:text-text-primary')}>
                 <Icon className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
                 {label}
               </Link>

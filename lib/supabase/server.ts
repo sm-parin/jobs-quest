@@ -1,16 +1,15 @@
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
-import type { Database } from '@/lib/types';
 
 /**
  * Server-side Supabase client (Server Components, Route Handlers, Server Actions).
- * Reads/writes cookies via next/headers — never import in "use client" files.
- * Uses the anon key + user JWT; the service role key is NOT used here.
+ * Intentionally untyped to support arbitrary join queries in route handlers.
  */
-export async function createClient() {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function createClient(): Promise<ReturnType<typeof createServerClient<any>>> {
   const cookieStore = await cookies();
 
-  return createServerClient<Database>(
+  return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
@@ -24,8 +23,7 @@ export async function createClient() {
               cookieStore.set(name, value, options),
             );
           } catch {
-            // setAll is called from a Server Component — ignore.
-            // Middleware handles session refresh instead.
+            // Ignore in Server Components — middleware handles session refresh.
           }
         },
       },
