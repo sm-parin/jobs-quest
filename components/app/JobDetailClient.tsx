@@ -8,12 +8,10 @@ import {
   PencilIcon,
   ArchiveIcon,
   ExternalLinkIcon,
-  PlusIcon,
   Trash2Icon,
   ChevronDownIcon,
   ChevronUpIcon,
   CheckIcon,
-  XIcon,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -22,6 +20,8 @@ import { createClient } from '@/lib/supabase/client';
 import { StatusPopover } from '@/components/app/StatusPopover';
 import { JobModal } from '@/components/app/JobModal';
 import { ReminderSection } from '@/components/app/ReminderSection';
+import { ContactPanel } from '@/components/app/ContactPanel';
+import { ActivityLogTimeline } from '@/components/app/ActivityLogTimeline';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -32,6 +32,7 @@ interface JobDetailClientProps {
   job: Job;
   contacts: Contact[];
   activityLog: ActivityLog[];
+  activityTotal: number;
   reminder: Reminder | null;
   userId: string;
   backHref: string;
@@ -48,74 +49,14 @@ function formatDate(dateStr: string): string {
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
-interface ContactFormState {
-  name: string;
-  designation: string;
-  email: string;
-  phone: string;
-}
-
-function AddContactForm({ jobId, onAdded }: { jobId: string; onAdded: (c: Contact) => void }) {
-  const [form, setForm] = useState<ContactFormState>({ name: '', designation: '', email: '', phone: '' });
-  const [saving, setSaving] = useState(false);
-
-  async function submit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!form.name.trim()) return;
-    setSaving(true);
-    try {
-      const res = await fetch('/api/contacts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify([{ job_id: jobId, name: form.name, designation: form.designation || null, email: form.email || null, phone: form.phone || null }]),
-      });
-      const body = await res.json().catch(() => ({}));
-      if (!res.ok) { toast.error(body.error ?? 'Failed to add contact'); return; }
-      onAdded(body.data[0]);
-      setForm({ name: '', designation: '', email: '', phone: '' });
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  return (
-    <form onSubmit={submit} className="rounded-md border border-border-app bg-surface-muted p-3 space-y-2 mt-3">
-      <p className="text-xs font-medium text-text-muted">New contact</p>
-      <div className="grid grid-cols-2 gap-2">
-        <div>
-          <Label className="text-xs">Name *</Label>
-          <Input value={form.name} onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))} placeholder="Jane Smith" className="h-8 text-sm" required />
-        </div>
-        <div>
-          <Label className="text-xs">Title</Label>
-          <Input value={form.designation} onChange={(e) => setForm((p) => ({ ...p, designation: e.target.value }))} placeholder="Hiring Manager" className="h-8 text-sm" />
-        </div>
-        <div>
-          <Label className="text-xs">Email</Label>
-          <Input type="email" value={form.email} onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))} placeholder="jane@co.com" className="h-8 text-sm" />
-        </div>
-        <div>
-          <Label className="text-xs">Phone</Label>
-          <Input value={form.phone} onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value }))} placeholder="+1 555 0100" className="h-8 text-sm" />
-        </div>
-      </div>
-      <Button type="submit" size="sm" disabled={saving}>{saving ? 'Saving…' : 'Add contact'}</Button>
-    </form>
-  );
-}
-
-export function JobDetailClient({ job: initialJob, contacts: initialContacts, activityLog, reminder: initialReminder, userId, backHref }: JobDetailClientProps) {
+export function JobDetailClient({ job: initialJob, contacts: initialContacts, activityLog, activityTotal, reminder: initialReminder, userId, backHref }: JobDetailClientProps) {
   const router = useRouter();
   const { statuses, updateJobOptimistic } = useJobStore();
   const supabase = createClient();
 
   const [job, setJob] = useState(initialJob);
-  const [contacts, setContacts] = useState(initialContacts);
   const [editOpen, setEditOpen] = useState(false);
   const [descOpen, setDescOpen] = useState(false);
-  const [showAllActivity, setShowAllActivity] = useState(false);
-  const [addContactOpen, setAddContactOpen] = useState(false);
-
   const [notes, setNotes] = useState(job.notes ?? '');
   const [notesSaveState, setNotesSaveState] = useState<'idle' | 'saving' | 'saved'>('idle');
   const notesTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -180,15 +121,6 @@ export function JobDetailClient({ job: initialJob, contacts: initialContacts, ac
     }
   }
 
-  async function handleRemoveContact(contactId: string) {
-    const res = await fetch(`/api/contacts/${contactId}`, { method: 'DELETE' });
-    if (res.ok || res.status === 204) {
-      setContacts((prev) => prev.filter((c) => c.id !== contactId));
-    } else {
-      toast.error('Failed to remove contact');
-    }
-  }
-
   async function handleResumeUpload(file: File) {
     if (file.size > 5 * 1024 * 1024) { toast.error('File must be under 5 MB'); return; }
     const ext = file.name.split('.').pop();
@@ -218,8 +150,6 @@ export function JobDetailClient({ job: initialJob, contacts: initialContacts, ac
       updateJobOptimistic(job.id, { resume_path: null });
     }
   }
-
-  const displayedActivity = showAllActivity ? activityLog : activityLog.slice(0, 5);
 
   return (
     <div className="mx-auto max-w-5xl space-y-4">
@@ -321,25 +251,7 @@ export function JobDetailClient({ job: initialJob, contacts: initialContacts, ac
 
         <div className="space-y-4">
           <div className="rounded-xl border border-border-app bg-surface p-4 space-y-3">
-            <div className="flex items-center justify-between">
-              <h2 className="text-sm font-semibold text-text-primary">Points of Contact</h2>
-              <button type="button" onClick={() => setAddContactOpen((v) => !v)} className="inline-flex items-center gap-1 text-xs text-brand-500 hover:text-brand-600">
-                <PlusIcon className="h-3 w-3" />Add
-              </button>
-            </div>
-            {contacts.length === 0 && !addContactOpen && <p className="text-xs text-text-muted">No contacts yet</p>}
-            {contacts.map((c) => (
-              <div key={c.id} className="group relative rounded-md border border-border-app bg-surface-muted p-2.5 text-sm">
-                <button type="button" onClick={() => handleRemoveContact(c.id)} title="Remove contact" className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 text-text-muted hover:text-destructive transition">
-                  <XIcon className="h-3.5 w-3.5" />
-                </button>
-                <p className="font-medium text-text-primary">{c.name}</p>
-                {c.designation && <p className="text-xs text-text-muted">{c.designation}</p>}
-                {c.email && <a href={`mailto:${c.email}`} className="text-xs text-brand-500 hover:underline block">{c.email}</a>}
-                {c.phone && <a href={`tel:${c.phone}`} className="text-xs text-text-muted hover:underline block">{c.phone}</a>}
-              </div>
-            ))}
-            {addContactOpen && <AddContactForm jobId={job.id} onAdded={(c) => { setContacts((prev) => [...prev, c]); setAddContactOpen(false); }} />}
+            <ContactPanel jobId={job.id} initialContacts={initialContacts} />
           </div>
 
           <div className="rounded-xl border border-border-app bg-surface p-4 space-y-3">
@@ -366,25 +278,13 @@ export function JobDetailClient({ job: initialJob, contacts: initialContacts, ac
             <ReminderSection jobId={job.id} initialReminder={initialReminder} />
           </div>
 
-          <div className="rounded-xl border border-border-app bg-surface p-4 space-y-3">
-            <h2 className="text-sm font-semibold text-text-primary">Activity</h2>
-            {activityLog.length === 0 ? (
-              <p className="text-xs text-text-muted">No activity recorded yet</p>
-            ) : (
-              <ol className="space-y-2">
-                {displayedActivity.map((entry) => (
-                  <li key={entry.id} className="flex items-start gap-2 text-xs text-text-muted">
-                    <span className="mt-1 inline-block h-2 w-2 flex-shrink-0 rounded-full bg-brand-300" />
-                    <span>Moved to <strong className="text-text-primary">{entry.new_status_label}</strong>{' · '}{formatDate(entry.changed_at)}</span>
-                  </li>
-                ))}
-              </ol>
-            )}
-            {activityLog.length > 5 && (
-              <button type="button" onClick={() => setShowAllActivity((v) => !v)} className="text-xs text-brand-500 hover:text-brand-600">
-                {showAllActivity ? 'Show less' : `Show all (${activityLog.length})`}
-              </button>
-            )}
+          <div id="activity" className="rounded-xl border border-border-app bg-surface p-4">
+            <ActivityLogTimeline
+              jobId={job.id}
+              initialEntries={activityLog}
+              initialTotal={activityTotal}
+              jobCreatedAt={job.created_at}
+            />
           </div>
         </div>
       </div>

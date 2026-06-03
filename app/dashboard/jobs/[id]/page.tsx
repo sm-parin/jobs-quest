@@ -42,9 +42,10 @@ export default async function JobDetailPage({ params, searchParams }: PageProps)
       .eq('job_id', id),
     supabase
       .from('activity_log')
-      .select('id,job_id,user_id,old_status_label,new_status_label,stage_date,changed_at')
+      .select('id,job_id,user_id,old_status_label,new_status_label,stage_date,changed_at', { count: 'exact' })
       .eq('job_id', id)
-      .order('changed_at', { ascending: false }),
+      .order('changed_at', { ascending: false })
+      .limit(5),
     supabase
       .from('reminders')
       .select('id,job_id,user_id,remind_at,is_done,created_at,updated_at')
@@ -58,6 +59,7 @@ export default async function JobDetailPage({ params, searchParams }: PageProps)
   const job = jobResult.data as unknown as Job;
   const contacts = (contactsResult.data ?? []) as unknown as Contact[];
   const activityLog = (activityResult.data ?? []) as unknown as ActivityLog[];
+  const activityTotal = activityResult.count ?? 0;
   const reminder = reminderResult.data as unknown as Reminder | null;
 
   const backSearchParams = new URLSearchParams();
@@ -74,6 +76,7 @@ export default async function JobDetailPage({ params, searchParams }: PageProps)
       job={job}
       contacts={contacts}
       activityLog={activityLog}
+      activityTotal={activityTotal}
       reminder={reminder}
       userId={user.id}
       backHref={backHref}

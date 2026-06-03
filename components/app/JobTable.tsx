@@ -8,6 +8,7 @@ import {
   Trash2Icon,
   BellIcon,
   BellRingIcon,
+  HistoryIcon,
   ArrowUpIcon,
   ArrowDownIcon,
   ArrowUpDownIcon,
@@ -23,6 +24,7 @@ import { StatusPopover } from '@/components/app/StatusPopover';
 import { JobTableEmpty } from '@/components/app/JobTableEmpty';
 import { FilterBar } from '@/components/app/FilterBar';
 import { JobModal } from '@/components/app/JobModal';
+import { ActivityPeekPopover } from '@/components/app/ActivityPeekPopover';
 import type { Job, Status, Platform, Reminder } from '@/lib/types';
 
 interface JobTableProps {
@@ -73,6 +75,14 @@ export function JobTable({
   const { platforms } = usePlatformStore();
 
   const [editJob, setEditJob] = useState<Job | null>(null);
+  const [peekJob, setPeekJob] = useState<Job | null>(null);
+  const [peekCoords, setPeekCoords] = useState({ top: 0, left: 0 });
+
+  function openPeek(job: Job, btn: HTMLButtonElement) {
+    const rect = btn.getBoundingClientRect();
+    setPeekCoords({ top: rect.bottom + 4, left: rect.right - 320 });
+    setPeekJob(job);
+  }
 
   useEffect(() => {
     setJobs(initialJobs);
@@ -237,12 +247,18 @@ export function JobTable({
           );
         })()}
       </td>
-      <td className="w-24 px-3 py-3" onClick={(e) => e.stopPropagation()}>
+      <td className="w-32 px-3 py-3" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center gap-1">
           <button type="button" aria-label={`Edit ${job.company} - ${job.role}`} title="Edit job"
             onClick={(e) => { e.stopPropagation(); setEditJob(job); }}
             className="p-1 rounded text-text-muted hover:text-brand-500 hover:bg-surface-muted transition-colors">
             <PencilIcon className="h-3.5 w-3.5" />
+          </button>
+          {/* TODO Sprint 7: on mobile card view, add activity peek to card action menu */}
+          <button type="button" aria-label={`View activity for ${job.company} - ${job.role}`} title="Activity log"
+            onClick={(e) => { e.stopPropagation(); openPeek(job, e.currentTarget); }}
+            className="hidden p-1 rounded text-text-muted hover:text-text-primary hover:bg-surface-muted transition-colors sm:block">
+            <HistoryIcon className="h-3.5 w-3.5" />
           </button>
           <button type="button" aria-label={`Archive ${job.company} - ${job.role}`} title="Archive job"
             onClick={(e) => handleArchive(job, e)}
@@ -296,7 +312,7 @@ export function JobTable({
                   <span className="sr-only">Reminder</span>
                   <BellIcon className="inline-block h-3.5 w-3.5" />
                 </th>
-                <th scope="col" className="w-24 px-3 py-2.5 text-xs font-medium text-text-muted">Actions</th>
+                <th scope="col" className="w-32 px-3 py-2.5 text-xs font-medium text-text-muted">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -323,6 +339,15 @@ export function JobTable({
 
       {/* Edit modal — add modal lives in DashboardTabs */}
       <JobModal open={!!editJob} onOpenChange={(v) => { if (!v) setEditJob(null); }} job={editJob ?? undefined} userId={userId} />
+
+      {/* Activity peek popover — single instance at table level */}
+      {peekJob && (
+        <ActivityPeekPopover
+          job={peekJob}
+          coords={peekCoords}
+          onClose={() => setPeekJob(null)}
+        />
+      )}
     </section>
   );
 }

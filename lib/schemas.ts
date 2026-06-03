@@ -72,3 +72,25 @@ export const platformSchema = z.object({
   notes: z.string().max(1000).optional(),
 });
 export type PlatformValues = z.infer<typeof platformSchema>;
+
+export const contactInputSchema = z.object({
+  name: z.string().min(1, 'Name is required').max(100),
+  designation: z.string().max(100).optional(),
+  email: z.string().email('Invalid email').optional().or(z.literal('')),
+  phone: z.string().max(20).optional(),
+});
+export type ContactInputValues = z.infer<typeof contactInputSchema>;
+
+export const contactBatchSchema = z.object({
+  job_id: z.string().uuid('job_id must be a valid UUID'),
+  contacts: z.array(contactInputSchema).min(1, 'At least one contact is required').max(20),
+});
+export type ContactBatchValues = z.infer<typeof contactBatchSchema>;
+
+export const activityLogSchema = z.object({
+  job_id: z.string().uuid('job_id must be a valid UUID'),
+  old_status_label: z.string().nullable().optional(),
+  new_status_label: z.string().min(1, 'new_status_label is required'),
+  stage_date: z.string().optional().nullable(),
+});
+export type ActivityLogValues = z.infer<typeof activityLogSchema>;
