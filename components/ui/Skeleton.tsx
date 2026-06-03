@@ -21,12 +21,8 @@ export function Skeleton({ className, variant = 'default' }: SkeletonProps) {
 
   return (
     <div
+      className={cn('animate-pulse bg-muted', variantClass, className)}
       aria-hidden="true"
-      className={cn(
-        'animate-pulse bg-muted',
-        variantClass,
-        className,
-      )}
     />
   );
 }

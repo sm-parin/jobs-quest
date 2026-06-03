@@ -38,18 +38,33 @@ export async function middleware(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
-  const isAuthRoute =
-    pathname.startsWith('/login') || pathname.startsWith('/signup');
+  // Routes that never require auth
+  const isPublicRoute =
+    pathname === '/' ||
+    pathname.startsWith('/login') ||
+    pathname.startsWith('/signup') ||
+    pathname.startsWith('/auth/');
 
-  // Redirect unauthenticated users to /login for protected routes
-  if (!user && !isAuthRoute) {
+  // Routes that always require auth
+  const isProtectedRoute =
+    pathname.startsWith('/dashboard') ||
+    pathname.startsWith('/api/');
+
+  // Redirect unauthenticated users away from protected routes
+  if (!user && isProtectedRoute) {
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = '/login';
     return NextResponse.redirect(redirectUrl);
   }
 
-  // Redirect authenticated users away from auth routes
-  if (user && isAuthRoute) {
+  // Redirect authenticated users away from auth pages
+  if (user && !isProtectedRoute && !isPublicRoute) {
+    const redirectUrl = request.nextUrl.clone();
+    redirectUrl.pathname = '/dashboard';
+    return NextResponse.redirect(redirectUrl);
+  }
+
+  if (user && (pathname.startsWith('/login') || pathname.startsWith('/signup'))) {
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = '/dashboard';
     return NextResponse.redirect(redirectUrl);
