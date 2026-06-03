@@ -5,6 +5,7 @@ interface JobStore {
   jobs: Job[];
   statuses: Status[];
   isLoading: boolean;
+  hydrated: boolean;
   setJobs: (jobs: Job[]) => void;
   setStatuses: (statuses: Status[]) => void;
   updateJobOptimistic: (id: string, patch: Partial<Job>) => void;
@@ -18,8 +19,9 @@ export const useJobStore = create<JobStore>((set) => ({
   jobs: [],
   statuses: [],
   isLoading: false,
+  hydrated: false,
 
-  setJobs: (jobs) => set({ jobs }),
+  setJobs: (jobs) => set({ jobs, hydrated: true }),
   setStatuses: (statuses) => set({ statuses }),
 
   updateJobOptimistic: (id, patch) =>

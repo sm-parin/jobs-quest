@@ -6,6 +6,7 @@ interface PlatformStore {
   platforms: Platform[];
   platformStatusOptions: PlatformStatusOption[];
   isLoading: boolean;
+  setPlatforms: (platforms: Platform[]) => void;
   fetchPlatforms: () => Promise<void>;
   fetchStatusOptions: () => Promise<void>;
   addPlatform: (values: PlatformValues) => Promise<Platform | null>;
@@ -17,6 +18,8 @@ export const usePlatformStore = create<PlatformStore>((set) => ({
   platforms: [],
   platformStatusOptions: [],
   isLoading: false,
+
+  setPlatforms: (platforms) => set({ platforms }),
 
   async fetchPlatforms() {
     set({ isLoading: true });
