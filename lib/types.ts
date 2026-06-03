@@ -109,6 +109,28 @@ export interface Reminder {
   updated_at: string;
 }
 
+export interface ReminderWithJob extends Reminder {
+  job?: {
+    company: string;
+    role: string;
+    status?: { label: string; color: string } | null;
+  } | null;
+}
+
+// ---------------------------------------------------------------------------
+// stats
+// ---------------------------------------------------------------------------
+export interface StatsResponse {
+  total_applied: number;
+  in_progress: number;
+  offers: number;
+  response_rate: number | null;
+  applied_this_week: number;
+  total_active_reminders: number;
+  overdue_reminders: number;
+  archived_count: number;
+}
+
 // ---------------------------------------------------------------------------
 // activity_log
 // ---------------------------------------------------------------------------

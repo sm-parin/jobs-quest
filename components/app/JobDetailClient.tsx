@@ -12,10 +12,7 @@ import {
   Trash2Icon,
   ChevronDownIcon,
   ChevronUpIcon,
-  BellRingIcon,
-  BellIcon,
   CheckIcon,
-  AlertTriangleIcon,
   XIcon,
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -24,6 +21,7 @@ import { useJobStore } from '@/store/jobStore';
 import { createClient } from '@/lib/supabase/client';
 import { StatusPopover } from '@/components/app/StatusPopover';
 import { JobModal } from '@/components/app/JobModal';
+import { ReminderSection } from '@/components/app/ReminderSection';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -113,13 +111,10 @@ export function JobDetailClient({ job: initialJob, contacts: initialContacts, ac
 
   const [job, setJob] = useState(initialJob);
   const [contacts, setContacts] = useState(initialContacts);
-  const [reminder, setReminder] = useState(initialReminder);
   const [editOpen, setEditOpen] = useState(false);
   const [descOpen, setDescOpen] = useState(false);
   const [showAllActivity, setShowAllActivity] = useState(false);
   const [addContactOpen, setAddContactOpen] = useState(false);
-  const [reminderInput, setReminderInput] = useState('');
-  const [settingReminder, setSettingReminder] = useState(false);
 
   const [notes, setNotes] = useState(job.notes ?? '');
   const [notesSaveState, setNotesSaveState] = useState<'idle' | 'saving' | 'saved'>('idle');
@@ -127,9 +122,6 @@ export function JobDetailClient({ job: initialJob, contacts: initialContacts, ac
 
   const [resumePath, setResumePath] = useState(job.resume_path);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const today = new Date().toISOString().slice(0, 10);
-  const reminderOverdue = reminder && !reminder.is_done && reminder.remind_at < today;
 
   const [editingStageDate, setEditingStageDate] = useState(false);
   const [stageDateValue, setStageDateValue] = useState(job.stage_date ?? '');
@@ -225,37 +217,6 @@ export function JobDetailClient({ job: initialJob, contacts: initialContacts, ac
       setResumePath(null);
       updateJobOptimistic(job.id, { resume_path: null });
     }
-  }
-
-  async function handleSetReminder() {
-    if (!reminderInput) return;
-    setSettingReminder(true);
-    const res = await fetch('/api/reminders', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ job_id: job.id, remind_at: reminderInput }),
-    });
-    const body = await res.json().catch(() => ({}));
-    setSettingReminder(false);
-    if (!res.ok) { toast.error(body.error ?? 'Failed to set reminder'); return; }
-    setReminder(body.data);
-    setReminderInput('');
-  }
-
-  async function handleMarkReminderDone() {
-    if (!reminder) return;
-    const res = await fetch(`/api/reminders/${reminder.id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ is_done: true }),
-    });
-    if (res.ok) setReminder((r) => r ? { ...r, is_done: true } : r);
-  }
-
-  async function handleRemoveReminder() {
-    if (!reminder) return;
-    const res = await fetch(`/api/reminders/${reminder.id}`, { method: 'DELETE' });
-    if (res.ok || res.status === 204) setReminder(null);
   }
 
   const displayedActivity = showAllActivity ? activityLog : activityLog.slice(0, 5);
@@ -401,34 +362,8 @@ export function JobDetailClient({ job: initialJob, contacts: initialContacts, ac
           </div>
 
           <div className="rounded-xl border border-border-app bg-surface p-4 space-y-3">
-            <div className="flex items-center gap-2">
-              <h2 className="text-sm font-semibold text-text-primary">Follow-up Reminder</h2>
-              {reminderOverdue && <AlertTriangleIcon className="h-4 w-4 text-destructive" />}
-            </div>
-            {reminder ? (
-              <div className={cn('space-y-2', reminderOverdue && 'text-destructive')}>
-                <div className="flex items-center gap-1.5 text-sm">
-                  {reminder.is_done ? <BellIcon className="h-4 w-4 text-text-muted" /> : reminderOverdue ? <BellRingIcon className="h-4 w-4 text-destructive" /> : <BellRingIcon className="h-4 w-4 text-brand-500" />}
-                  <span className={reminder.is_done ? 'text-text-muted line-through' : ''}>{formatDate(reminder.remind_at)}</span>
-                  {reminder.is_done && <span className="text-xs text-text-muted">(done)</span>}
-                </div>
-                <div className="flex items-center gap-2">
-                  {!reminder.is_done && (
-                    <Button size="sm" variant="outline" onClick={handleMarkReminderDone}>
-                      <CheckIcon className="mr-1 h-3.5 w-3.5" />Mark done
-                    </Button>
-                  )}
-                  <Button size="sm" variant="ghost" onClick={handleRemoveReminder} className="text-destructive hover:text-destructive">Remove</Button>
-                </div>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2">
-                <Input type="date" value={reminderInput} onChange={(e) => setReminderInput(e.target.value)} min={today} className="h-8 w-36 text-xs" aria-label="Reminder date" />
-                <Button size="sm" variant="outline" onClick={handleSetReminder} disabled={!reminderInput || settingReminder}>
-                  {settingReminder ? 'Setting…' : 'Set reminder'}
-                </Button>
-              </div>
-            )}
+            <h2 className="text-sm font-semibold text-text-primary">Follow-up Reminder</h2>
+            <ReminderSection jobId={job.id} initialReminder={initialReminder} />
           </div>
 
           <div className="rounded-xl border border-border-app bg-surface p-4 space-y-3">

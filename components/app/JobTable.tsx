@@ -1,16 +1,16 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   PencilIcon,
   ArchiveIcon,
   Trash2Icon,
   BellIcon,
+  BellRingIcon,
   ArrowUpIcon,
   ArrowDownIcon,
   ArrowUpDownIcon,
-  PlusIcon,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useVirtualizer } from '@tanstack/react-virtual';
@@ -23,14 +23,16 @@ import { StatusPopover } from '@/components/app/StatusPopover';
 import { JobTableEmpty } from '@/components/app/JobTableEmpty';
 import { FilterBar } from '@/components/app/FilterBar';
 import { JobModal } from '@/components/app/JobModal';
-import { Button } from '@/components/ui/button';
-import type { Job, Status, Platform } from '@/lib/types';
+import type { Job, Status, Platform, Reminder } from '@/lib/types';
 
 interface JobTableProps {
   initialJobs: Job[];
   initialStatuses: Status[];
   initialPlatforms: Platform[];
+  initialReminders: Reminder[];
   userId: string;
+  addOpen: boolean;
+  onAddOpenChange: (open: boolean) => void;
 }
 
 const PRIORITY_COLOR: Record<string, string> = {
@@ -57,18 +59,36 @@ function SortIcon({ columnKey, currentSort }: { columnKey: SortKey; currentSort:
     : <ArrowDownIcon className="ml-1 h-3 w-3 text-brand-500" />;
 }
 
-export function JobTable({ initialJobs, initialStatuses, initialPlatforms, userId }: JobTableProps) {
+export function JobTable({
+  initialJobs,
+  initialStatuses,
+  initialPlatforms,
+  initialReminders,
+  userId,
+  addOpen,
+  onAddOpenChange,
+}: JobTableProps) {
   const router = useRouter();
   const { jobs, statuses, setJobs, setStatuses, removeJobOptimistic, updateJobOptimistic } = useJobStore();
   const { platforms } = usePlatformStore();
 
-  const [addOpen, setAddOpen] = useState(false);
   const [editJob, setEditJob] = useState<Job | null>(null);
 
   useEffect(() => {
     setJobs(initialJobs);
     setStatuses(initialStatuses);
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Build a map of job_id → reminder for the bell column
+  const today = new Date().toISOString().slice(0, 10);
+  const remindersMap = useMemo(() => {
+    const m = new Map<string, Reminder>();
+    for (const r of initialReminders) {
+      if (!r.is_done) m.set(r.job_id, r);
+    }
+    return m;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const { filters, filteredJobs, hasActiveFilters, setFilter, clearFilters } = useJobFilters(jobs);
@@ -191,8 +211,31 @@ export function JobTable({ initialJobs, initialStatuses, initialPlatforms, userI
       <td className="w-[120px] px-3 py-3">
         <span className="text-sm text-text-muted truncate block" title={job.salary ?? ''}>{job.salary || '—'}</span>
       </td>
-      <td className="w-12 px-2 py-3 text-center">
-        <BellIcon className="inline-block h-4 w-4 text-text-muted opacity-30" />
+      <td className="w-12 px-2 py-3 text-center" onClick={(e) => e.stopPropagation()}>
+        {(() => {
+          const r = remindersMap.get(job.id);
+          if (!r) {
+            return (
+              <span title="No reminder set" aria-label="No reminder set">
+                <BellIcon className="inline-block h-4 w-4 text-text-muted opacity-30" />
+              </span>
+            );
+          }
+          const overdue = r.remind_at < today;
+          return (
+            <span
+              title={overdue ? `Overdue since ${r.remind_at}` : `Follow up by ${r.remind_at}`}
+              aria-label={overdue ? `Overdue reminder since ${r.remind_at}` : `Reminder: follow up by ${r.remind_at}`}
+            >
+              <BellRingIcon
+                className={cn(
+                  'inline-block h-4 w-4',
+                  overdue ? 'text-destructive animate-pulse' : 'text-brand-500',
+                )}
+              />
+            </span>
+          );
+        })()}
       </td>
       <td className="w-24 px-3 py-3" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center gap-1">
@@ -219,15 +262,7 @@ export function JobTable({ initialJobs, initialStatuses, initialPlatforms, userI
   const effectivePlatforms = platforms.length > 0 ? platforms : initialPlatforms;
 
   return (
-    <section aria-labelledby="dashboard-heading" className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h1 id="dashboard-heading" className="text-2xl font-semibold text-text-primary">Dashboard</h1>
-        <Button onClick={() => setAddOpen(true)}>
-          <PlusIcon className="mr-2 h-4 w-4" aria-hidden="true" />
-          Add Job
-        </Button>
-      </div>
-
+    <section aria-label="Active jobs" className="space-y-4">
       <FilterBar
         filters={filters}
         statuses={statuses.length > 0 ? statuses : initialStatuses}
@@ -238,7 +273,7 @@ export function JobTable({ initialJobs, initialStatuses, initialPlatforms, userI
       />
 
       {sortedJobs.length === 0 ? (
-        <JobTableEmpty hasFilters={hasActiveFilters} onAddJob={() => setAddOpen(true)} onClearFilters={clearFilters} />
+        <JobTableEmpty hasFilters={hasActiveFilters} onAddJob={() => onAddOpenChange(true)} onClearFilters={clearFilters} />
       ) : (
         <div
           ref={parentRef}
@@ -286,7 +321,7 @@ export function JobTable({ initialJobs, initialStatuses, initialPlatforms, userI
         </div>
       )}
 
-      <JobModal open={addOpen} onOpenChange={setAddOpen} userId={userId} />
+      {/* Edit modal — add modal lives in DashboardTabs */}
       <JobModal open={!!editJob} onOpenChange={(v) => { if (!v) setEditJob(null); }} job={editJob ?? undefined} userId={userId} />
     </section>
   );

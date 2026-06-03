@@ -6,8 +6,10 @@ interface JobStore {
   statuses: Status[];
   isLoading: boolean;
   hydrated: boolean;
+  lastMutatedAt: number;
   setJobs: (jobs: Job[]) => void;
   setStatuses: (statuses: Status[]) => void;
+  markMutated: () => void;
   updateJobOptimistic: (id: string, patch: Partial<Job>) => void;
   addJobOptimistic: (job: Job) => void;
   removeJobOptimistic: (id: string) => void;
@@ -20,20 +22,23 @@ export const useJobStore = create<JobStore>((set) => ({
   statuses: [],
   isLoading: false,
   hydrated: false,
+  lastMutatedAt: 0,
 
   setJobs: (jobs) => set({ jobs, hydrated: true }),
   setStatuses: (statuses) => set({ statuses }),
+  markMutated: () => set({ lastMutatedAt: Date.now() }),
 
   updateJobOptimistic: (id, patch) =>
     set((state) => ({
       jobs: state.jobs.map((j) => (j.id === id ? { ...j, ...patch } : j)),
+      lastMutatedAt: Date.now(),
     })),
 
   addJobOptimistic: (job) =>
-    set((state) => ({ jobs: [job, ...state.jobs] })),
+    set((state) => ({ jobs: [job, ...state.jobs], lastMutatedAt: Date.now() })),
 
   removeJobOptimistic: (id) =>
-    set((state) => ({ jobs: state.jobs.filter((j) => j.id !== id) })),
+    set((state) => ({ jobs: state.jobs.filter((j) => j.id !== id), lastMutatedAt: Date.now() })),
 
   fetchJobs: async () => {
     set({ isLoading: true });
