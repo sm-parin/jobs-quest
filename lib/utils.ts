@@ -32,3 +32,11 @@ export function relativeTime(dateStr: string): string {
   const months = Math.floor(days / 30);
   return `${months} month${months !== 1 ? 's' : ''} ago`;
 }
+
+/**
+ * Extract the filename from a Supabase Storage path.
+ * e.g. "user-id/job-id/my-resume.pdf" → "my-resume.pdf"
+ */
+export function getResumeFilename(path: string): string {
+  return path.split('/').pop() ?? path;
+}

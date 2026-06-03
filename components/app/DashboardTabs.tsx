@@ -9,6 +9,7 @@ import { OverdueBanner } from '@/components/app/OverdueBanner';
 import { JobTable } from '@/components/app/JobTable';
 import { ArchivedJobsTable } from '@/components/app/ArchivedJobsTable';
 import { JobModal } from '@/components/app/JobModal';
+import { ExportButton } from '@/components/app/ExportButton';
 import { Button } from '@/components/ui/button';
 import type { Job, Status, Platform, Reminder } from '@/lib/types';
 
@@ -80,10 +81,13 @@ export function DashboardTabs({
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold text-text-primary">Dashboard</h1>
         {currentTab === 'active' && (
-          <Button onClick={() => setAddOpen(true)}>
-            <PlusIcon className="mr-2 h-4 w-4" aria-hidden="true" />
-            Add Job
-          </Button>
+          <div className="flex items-center gap-2">
+            <ExportButton />
+            <Button onClick={() => setAddOpen(true)}>
+              <PlusIcon className="mr-2 h-4 w-4" aria-hidden="true" />
+              Add Job
+            </Button>
+          </div>
         )}
       </div>
 

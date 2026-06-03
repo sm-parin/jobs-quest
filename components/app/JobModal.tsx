@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ExternalLinkIcon, Loader2, PlusIcon, Trash2Icon, ChevronDownIcon, ChevronUpIcon } from 'lucide-react';
+import { ExternalLinkIcon, Loader2, Loader2Icon, PlusIcon, Trash2Icon, WandIcon, ChevronDownIcon, ChevronUpIcon } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { jobSchema, type JobValues } from '@/lib/schemas';
@@ -18,6 +18,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
+import { ExtractedFieldsPreview, type ExtractResult } from '@/components/app/ExtractedFieldsPreview';
+import { ResumeSection } from '@/components/app/ResumeSection';
 
 const PRIORITY_OPTIONS = [
   { value: 'low', label: 'Low' },
@@ -52,6 +54,13 @@ export function JobModal({ open, onOpenChange, job, userId }: JobModalProps) {
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [removeResume, setRemoveResume] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Job-description extraction state
+  const [extractUrl, setExtractUrl] = useState('');
+  const [extracting, setExtracting] = useState(false);
+  const [extractResult, setExtractResult] = useState<ExtractResult | null>(null);
+  const [extractError, setExtractError] = useState<string | null>(null);
+  const [showExtract, setShowExtract] = useState(false);
 
   const {
     register,
@@ -124,6 +133,10 @@ export function JobModal({ open, onOpenChange, job, userId }: JobModalProps) {
     setResumeFile(null);
     setRemoveResume(false);
     setDescOpen(false);
+    setExtractUrl('');
+    setExtractResult(null);
+    setExtractError(null);
+    setShowExtract(false);
     setContacts(
       job?.contacts
         ? job.contacts.map((c) => ({ id: c.id, name: c.name, designation: c.designation ?? '', email: c.email ?? '', phone: c.phone ?? '' }))
@@ -158,7 +171,7 @@ export function JobModal({ open, onOpenChange, job, userId }: JobModalProps) {
     try {
       let resumePath = job?.resume_path ?? null;
 
-      // Handle resume upload / removal
+      // Handle resume upload / removal (legacy path — only used in add mode)
       if (removeResume) {
         resumePath = null;
       }
@@ -264,6 +277,45 @@ export function JobModal({ open, onOpenChange, job, userId }: JobModalProps) {
   const watchUrl = useWatch({ control, name: 'url' });
   const watchPriority = useWatch({ control, name: 'priority' });
   const watchPlatformId = useWatch({ control, name: 'source_platform_id' });
+  const watchJobDescription = useWatch({ control, name: 'job_description' });
+
+  async function runExtraction(payload: { text?: string; url?: string }) {
+    setExtracting(true);
+    setExtractResult(null);
+    setExtractError(null);
+    setShowExtract(true);
+    try {
+      const res = await fetch('/api/jobs/extract', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setExtractError(body.error ?? 'Extraction failed');
+      } else {
+        setExtractResult(body.data as ExtractResult);
+      }
+    } catch {
+      setExtractError('Extraction failed. Please try again.');
+    } finally {
+      setExtracting(false);
+    }
+  }
+
+  function handleApplyField(field: 'company' | 'role' | 'location' | 'salary', value: string) {
+    setValue(field, value);
+  }
+
+  function handleApplyAll() {
+    if (!extractResult) return;
+    let count = 0;
+    if (extractResult.company) { setValue('company', extractResult.company); count++; }
+    if (extractResult.role) { setValue('role', extractResult.role); count++; }
+    if (extractResult.location) { setValue('location', extractResult.location); count++; }
+    if (extractResult.salary) { setValue('salary', extractResult.salary); count++; }
+    toast.success(`${count} field${count !== 1 ? 's' : ''} filled in`);
+  }
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -314,7 +366,72 @@ export function JobModal({ open, onOpenChange, job, userId }: JobModalProps) {
                 Job description
               </button>
               {descOpen && (
-                <Textarea id="j-desc" rows={6} placeholder="Paste the job description here…" {...register('job_description')} />
+                <div className="space-y-2">
+                  {/* Import from URL */}
+                  <div className="flex gap-2">
+                    <Input
+                      type="url"
+                      placeholder="Paste job posting URL..."
+                      value={extractUrl}
+                      onChange={(e) => setExtractUrl(e.target.value)}
+                      className="h-8 text-sm"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={!extractUrl.trim() || extracting}
+                      onClick={() => runExtraction({ url: extractUrl.trim() })}
+                      className="h-8 shrink-0 gap-1.5 text-xs"
+                    >
+                      {extracting && !watchJobDescription
+                        ? <Loader2Icon className="h-3.5 w-3.5 animate-spin" />
+                        : null}
+                      Fetch
+                    </Button>
+                  </div>
+
+                  {/* Job description textarea + Extract button */}
+                  <div className="relative">
+                    <Textarea id="j-desc" rows={6} placeholder="Paste the job description here…" {...register('job_description')} />
+                    {watchJobDescription && watchJobDescription.length > 50 && (
+                      <button
+                        type="button"
+                        aria-label="Extract job details from description"
+                        onClick={() => runExtraction({ text: watchJobDescription })}
+                        disabled={extracting}
+                        className="absolute right-2 top-2 flex items-center gap-1 rounded bg-surface px-2 py-1 text-xs font-medium text-brand-500 shadow-sm border border-border-app hover:bg-surface-muted transition-colors disabled:opacity-50"
+                      >
+                        {extracting && watchJobDescription
+                          ? <Loader2Icon className="h-3 w-3 animate-spin" />
+                          : <WandIcon className="h-3 w-3" />}
+                        Extract details
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Extraction preview */}
+                  {showExtract && (
+                    <ExtractedFieldsPreview
+                      result={extractResult ?? { company: null, role: null, location: null, salary: null, confidence: { company: null, role: null, location: null, salary: null } }}
+                      loading={extracting}
+                      error={extractError}
+                      currentValues={{
+                        company: getValues('company') ?? '',
+                        role: getValues('role') ?? '',
+                        location: getValues('location') ?? '',
+                        salary: getValues('salary') ?? '',
+                      }}
+                      onApply={handleApplyField}
+                      onApplyAll={handleApplyAll}
+                      onDismiss={() => setShowExtract(false)}
+                      onRetry={() => {
+                        if (extractUrl.trim()) runExtraction({ url: extractUrl.trim() });
+                        else if (watchJobDescription) runExtraction({ text: watchJobDescription });
+                      }}
+                    />
+                  )}
+                </div>
               )}
             </div>
           </fieldset>
@@ -395,26 +512,12 @@ export function JobModal({ open, onOpenChange, job, userId }: JobModalProps) {
           {/* ── Resume ── */}
           <fieldset className="space-y-4">
             <legend className="text-sm font-semibold text-text-primary mb-3">Resume</legend>
-            {job?.resume_path && !removeResume ? (
-              <div className="flex items-center justify-between rounded-md border border-border-app bg-surface-muted px-3 py-2 text-sm">
-                <span className="truncate text-text-muted max-w-[320px]" title={job.resume_path}>{job.resume_path.split('/').pop()}</span>
-                <button type="button" onClick={() => setRemoveResume(true)} className="ml-2 text-destructive hover:text-destructive/80" aria-label="Remove resume">
-                  <Trash2Icon className="h-4 w-4" />
-                </button>
-              </div>
+            {isEdit && job ? (
+              <ResumeSection jobId={job.id} initialResumePath={job.resume_path ?? null} />
             ) : (
-              <div className="space-y-1.5">
-                <Label htmlFor="j-resume">Upload resume</Label>
-                <Input id="j-resume" type="file" accept=".pdf,.doc,.docx" ref={fileInputRef}
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (!file) return;
-                    if (file.size > 5 * 1024 * 1024) { toast.error('File must be under 5 MB'); e.target.value = ''; return; }
-                    setResumeFile(file);
-                  }}
-                  className="cursor-pointer" />
-                <p className="text-xs text-text-muted">.pdf, .doc, .docx — max 5 MB</p>
-              </div>
+              <p className="text-xs text-text-muted">
+                You can upload a resume after saving this job.
+              </p>
             )}
           </fieldset>
 

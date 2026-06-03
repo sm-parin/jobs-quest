@@ -8,7 +8,6 @@ import {
   PencilIcon,
   ArchiveIcon,
   ExternalLinkIcon,
-  Trash2Icon,
   ChevronDownIcon,
   ChevronUpIcon,
   CheckIcon,
@@ -16,15 +15,15 @@ import {
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { useJobStore } from '@/store/jobStore';
-import { createClient } from '@/lib/supabase/client';
 import { StatusPopover } from '@/components/app/StatusPopover';
 import { JobModal } from '@/components/app/JobModal';
 import { ReminderSection } from '@/components/app/ReminderSection';
 import { ContactPanel } from '@/components/app/ContactPanel';
 import { ActivityLogTimeline } from '@/components/app/ActivityLogTimeline';
+import { ResumeSection } from '@/components/app/ResumeSection';
+import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import type { Job, Contact, ActivityLog, Reminder } from '@/lib/types';
 
@@ -52,7 +51,6 @@ function formatDate(dateStr: string): string {
 export function JobDetailClient({ job: initialJob, contacts: initialContacts, activityLog, activityTotal, reminder: initialReminder, userId, backHref }: JobDetailClientProps) {
   const router = useRouter();
   const { statuses, updateJobOptimistic } = useJobStore();
-  const supabase = createClient();
 
   const [job, setJob] = useState(initialJob);
   const [editOpen, setEditOpen] = useState(false);
@@ -60,9 +58,6 @@ export function JobDetailClient({ job: initialJob, contacts: initialContacts, ac
   const [notes, setNotes] = useState(job.notes ?? '');
   const [notesSaveState, setNotesSaveState] = useState<'idle' | 'saving' | 'saved'>('idle');
   const notesTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const [resumePath, setResumePath] = useState(job.resume_path);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [editingStageDate, setEditingStageDate] = useState(false);
   const [stageDateValue, setStageDateValue] = useState(job.stage_date ?? '');
@@ -118,36 +113,6 @@ export function JobDetailClient({ job: initialJob, contacts: initialContacts, ac
       router.push('/dashboard');
     } else {
       toast.error('Failed to archive job');
-    }
-  }
-
-  async function handleResumeUpload(file: File) {
-    if (file.size > 5 * 1024 * 1024) { toast.error('File must be under 5 MB'); return; }
-    const ext = file.name.split('.').pop();
-    const path = `${userId}/${Date.now()}.${ext}`;
-    const { error } = await supabase.storage.from('resumes').upload(path, file, { upsert: true });
-    if (error) { toast.error('Upload failed'); return; }
-    const res = await fetch(`/api/jobs/${job.id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ resume_path: path }),
-    });
-    if (res.ok) {
-      setResumePath(path);
-      updateJobOptimistic(job.id, { resume_path: path });
-      toast.success('Resume uploaded');
-    }
-  }
-
-  async function handleRemoveResume() {
-    const res = await fetch(`/api/jobs/${job.id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ resume_path: null }),
-    });
-    if (res.ok) {
-      setResumePath(null);
-      updateJobOptimistic(job.id, { resume_path: null });
     }
   }
 
@@ -256,21 +221,9 @@ export function JobDetailClient({ job: initialJob, contacts: initialContacts, ac
 
           <div className="rounded-xl border border-border-app bg-surface p-4 space-y-3">
             <h2 className="text-sm font-semibold text-text-primary">Resume</h2>
-            {resumePath ? (
-              <div className="flex items-center justify-between rounded-md border border-border-app bg-surface-muted px-3 py-2 text-sm">
-                <span className="truncate text-text-muted text-xs max-w-[180px]" title={resumePath}>{resumePath.split('/').pop()}</span>
-                <div className="flex items-center gap-2 ml-2 shrink-0">
-                  <a href={supabase.storage.from('resumes').getPublicUrl(resumePath).data.publicUrl} download target="_blank" rel="noopener noreferrer" className="text-brand-500 hover:text-brand-600 text-xs" title="Download resume">Download</a>
-                  <button type="button" onClick={handleRemoveResume} className="text-destructive hover:text-destructive/80" title="Remove resume"><Trash2Icon className="h-3.5 w-3.5" /></button>
-                </div>
-              </div>
-            ) : (
-              <>
-                <input ref={fileInputRef} type="file" accept=".pdf,.doc,.docx" className="hidden" onChange={(e) => { const file = e.target.files?.[0]; if (file) handleResumeUpload(file); e.target.value = ''; }} />
-                <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>Upload Resume</Button>
-                <p className="text-xs text-text-muted">.pdf, .doc, .docx — max 5 MB</p>
-              </>
-            )}
+            <ErrorBoundary>
+              <ResumeSection jobId={job.id} initialResumePath={job.resume_path} />
+            </ErrorBoundary>
           </div>
 
           <div className="rounded-xl border border-border-app bg-surface p-4 space-y-3">
