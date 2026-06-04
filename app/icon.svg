@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300" fill="none">
+  <defs>
+    <!-- Clip regions for person icons inside each circle -->
+    <clipPath id="clip-main">
+      <circle cx="118" cy="148" r="80"/>
+    </clipPath>
+    <clipPath id="clip-tl">
+      <circle cx="48" cy="76" r="28"/>
+    </clipPath>
+    <clipPath id="clip-tr">
+      <circle cx="232" cy="64" r="36"/>
+    </clipPath>
+    <clipPath id="clip-br">
+      <circle cx="248" cy="222" r="34"/>
+    </clipPath>
+  </defs>
+
+  <!-- ── Sparkles (4-pointed elongated stars) ── -->
+
+  <!-- Large sparkle — top-left region -->
+  <path d="M60,48 L63,59 L74,62 L63,65 L60,76 L57,65 L46,62 L57,59 Z" fill="#6366f1"/>
+
+  <!-- Medium sparkle — top-center -->
+  <path d="M152,18 L154,25 L161,27 L154,29 L152,36 L150,29 L143,27 L150,25 Z" fill="#6366f1"/>
+
+  <!-- Small sparkle — between top-center sparkles -->
+  <path d="M178,23 L179,27 L183,28 L179,29 L178,33 L177,29 L173,28 L177,27 Z" fill="#818cf8"/>
+
+  <!-- Medium sparkle — right side -->
+  <path d="M271,88 L273,95 L280,97 L273,99 L271,106 L269,99 L262,97 L269,95 Z" fill="#818cf8"/>
+
+  <!-- ── Top-left satellite circle (lighter, smaller — appears behind main) ── -->
+  <circle cx="48" cy="76" r="28" fill="#818cf8"/>
+  <g clip-path="url(#clip-tl)">
+    <!-- head -->
+    <circle cx="48" cy="67" r="9" fill="white" opacity="0.85"/>
+    <!-- body -->
+    <circle cx="48" cy="93" r="15" fill="white" opacity="0.85"/>
+  </g>
+
+  <!-- ── Top-right satellite circle ── -->
+  <circle cx="232" cy="64" r="36" fill="#6366f1"/>
+  <g clip-path="url(#clip-tr)">
+    <circle cx="232" cy="54" r="12" fill="white" opacity="0.9"/>
+    <circle cx="232" cy="83" r="20" fill="white" opacity="0.9"/>
+  </g>
+
+  <!-- ── Bottom-right satellite circle ── -->
+  <circle cx="248" cy="222" r="34" fill="#6366f1"/>
+  <g clip-path="url(#clip-br)">
+    <circle cx="248" cy="213" r="11" fill="white" opacity="0.9"/>
+    <circle cx="248" cy="242" r="18" fill="white" opacity="0.9"/>
+  </g>
+
+  <!-- ── Magnifying glass handle (behind main circle) ── -->
+  <line
+    x1="184" y1="213"
+    x2="260" y2="280"
+    stroke="#1e1b4b"
+    stroke-width="26"
+    stroke-linecap="round"
+  />
+
+  <!-- ── Main magnifying glass circle ── -->
+  <circle cx="118" cy="148" r="80" fill="#1e1b4b"/>
+  <!-- Rim highlight — gives the raised-ring look -->
+  <circle cx="118" cy="148" r="80" stroke="#4338ca" stroke-width="7" fill="none"/>
+
+  <!-- Person icon inside main circle -->
+  <g clip-path="url(#clip-main)">
+    <!-- head -->
+    <circle cx="118" cy="130" r="23" fill="white"/>
+    <!-- shoulders / body — large circle clipped to bottom half -->
+    <circle cx="118" cy="188" r="40" fill="white"/>
+  </g>
+</svg>
