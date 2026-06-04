@@ -3,7 +3,7 @@
 import { useState, useRef } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { GripVertical, ChevronUp, ChevronDown, Pencil, Trash2, Check, X } from 'lucide-react';
+import { GripVertical, ChevronUp, ChevronDown, Pencil, Trash2, Check, X, LockIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ColorPicker } from '@/components/app/ColorPicker';
@@ -14,6 +14,7 @@ interface StatusItem {
   label: string;
   color?: string;
   order: number;
+  is_system?: boolean;
 }
 
 interface StatusOptionRowProps {
@@ -144,6 +145,11 @@ export function StatusOptionRow({
               <X className="h-3 w-3" />
             </Button>
           </>
+        ) : item.is_system ? (
+          <div className="flex items-center gap-1 px-1" title="System status — cannot be edited or deleted">
+            <LockIcon className="h-3 w-3 text-text-muted" aria-hidden />
+            <span className="text-[10px] text-text-muted font-medium">System</span>
+          </div>
         ) : (
           <>
             <Button type="button" variant="ghost" size="icon" className="h-7 w-7" aria-label={`Edit ${item.label}`} onClick={startEdit}>

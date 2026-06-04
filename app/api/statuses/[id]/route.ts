@@ -19,12 +19,25 @@ export async function PATCH(
   const body = await request.json();
   const { label, color, order } = body;
 
+  // Block label/color edits for system statuses
+  if (label !== undefined || color !== undefined) {
+    const { data: existing } = await supabase
+      .from('statuses')
+      .select('is_system')
+      .eq('id', id)
+      .eq('user_id', user.id)
+      .single();
+    if (existing?.is_system) {
+      return NextResponse.json({ error: 'This status cannot be modified' }, { status: 403 });
+    }
+  }
+
   const { data, error } = await supabase
     .from('statuses')
     .update({ label, color, order })
     .eq('id', id)
     .eq('user_id', user.id)
-    .select('id, user_id, label, color, order, created_at, updated_at')
+    .select('id, user_id, label, color, order, is_system, created_at, updated_at')
     .single();
 
   if (error) return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
@@ -41,6 +54,17 @@ export async function DELETE(
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  // Block deletion of system statuses
+  const { data: existing } = await supabase
+    .from('statuses')
+    .select('is_system')
+    .eq('id', id)
+    .eq('user_id', user.id)
+    .single();
+  if (existing?.is_system) {
+    return NextResponse.json({ error: 'This status cannot be deleted' }, { status: 403 });
+  }
 
   const { count } = await supabase
     .from('jobs')

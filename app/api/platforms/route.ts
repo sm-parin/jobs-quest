@@ -4,7 +4,7 @@ import { platformSchema } from '@/lib/schemas';
 
 const PLATFORM_SELECT = `
   id, user_id, name, url, profile_status_id, subscription_type,
-  login_email, last_application_date, personal_rating, notes,
+  login_email, last_application_date, personal_rating, notes, resume_path,
   created_at, updated_at,
   profile_status:platform_status_options(id, label, order)
 `;

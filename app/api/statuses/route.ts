@@ -8,7 +8,7 @@ export async function GET() {
 
   const { data, error } = await supabase
     .from('statuses')
-    .select('id, user_id, label, color, order, created_at, updated_at')
+    .select('id, user_id, label, color, order, is_system, created_at, updated_at')
     .eq('user_id', user.id)
     .order('order', { ascending: true });
 
@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
   const { data, error } = await supabase
     .from('statuses')
     .insert({ user_id: user.id, label, color: color ?? '#94a3b8', order: order ?? 0 })
-    .select('id, user_id, label, color, order, created_at, updated_at')
+    .select('id, user_id, label, color, order, is_system, created_at, updated_at')
     .single();
 
   if (error) return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

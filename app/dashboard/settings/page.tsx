@@ -14,7 +14,7 @@ import { ColorPicker } from '@/components/app/ColorPicker';
 import { WarningDialog } from '@/components/ui/WarningDialog';
 import type { Status, PlatformStatusOption } from '@/lib/types';
 
-interface StatusListProps<T extends { id: string; label: string; order: number; color?: string }> {
+interface StatusListProps<T extends { id: string; label: string; order: number; color?: string; is_system?: boolean }> {
   items: T[];
   showColor: boolean;
   onAdd: (label: string, color?: string) => Promise<void>;
@@ -23,7 +23,7 @@ interface StatusListProps<T extends { id: string; label: string; order: number; 
   onReorder: (ids: string[]) => void;
 }
 
-function StatusList<T extends { id: string; label: string; order: number; color?: string }>({
+function StatusList<T extends { id: string; label: string; order: number; color?: string; is_system?: boolean }>({
   items, showColor, onAdd, onEdit, onDelete, onReorder,
 }: StatusListProps<T>) {
   const [addLabel, setAddLabel] = useState('');

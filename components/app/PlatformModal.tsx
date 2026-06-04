@@ -1,14 +1,15 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Loader2, StarIcon } from 'lucide-react';
+import { FileTextIcon, Loader2, StarIcon, UploadIcon, XIcon } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { platformSchema, type PlatformValues } from '@/lib/schemas';
 import { usePlatformStore } from '@/store/platformStore';
 import type { Platform } from '@/lib/types';
+import { getResumeFilename } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -26,10 +27,14 @@ interface PlatformModalProps {
 }
 
 export function PlatformModal({ open, onOpenChange, platform }: PlatformModalProps) {
-  const { platformStatusOptions, addPlatform, updatePlatform } = usePlatformStore();
+  const { platformStatusOptions, addPlatform, updatePlatform, setPlatformResumePath } = usePlatformStore();
   const isEdit = !!platform;
   const [step, setStep] = useState(1);
   const [ratingHover, setRatingHover] = useState<number | null>(null);
+  const [platformResumeFile, setPlatformResumeFile] = useState<File | null>(null);
+  const [removePlatformResume, setRemovePlatformResume] = useState(false);
+  const [isUploadingResume, setIsUploadingResume] = useState(false);
+  const resumeInputRef = useRef<HTMLInputElement>(null);
 
   const { register, handleSubmit, setValue, watch, reset, trigger, formState: { errors, isSubmitting } } = useForm<PlatformValues>({
     resolver: zodResolver(platformSchema),
@@ -39,6 +44,8 @@ export function PlatformModal({ open, onOpenChange, platform }: PlatformModalPro
   useEffect(() => {
     if (open) {
       setStep(1);
+      setPlatformResumeFile(null);
+      setRemovePlatformResume(false);
       reset(platform
         ? { name: platform.name, url: platform.url ?? '', profile_status_id: platform.profile_status_id ?? null, subscription_type: platform.subscription_type ?? '', login_email: platform.login_email ?? '', personal_rating: platform.personal_rating ?? null, notes: platform.notes ?? '' }
         : { name: '', url: '', profile_status_id: null, subscription_type: '', login_email: '', personal_rating: null, notes: '' });
@@ -48,6 +55,30 @@ export function PlatformModal({ open, onOpenChange, platform }: PlatformModalPro
   async function onSubmit(values: PlatformValues) {
     const result = isEdit && platform ? await updatePlatform(platform.id, values) : await addPlatform(values);
     if (!result) { toast.error(isEdit ? 'Failed to update platform' : 'Failed to add platform'); return; }
+
+    const platformId = result.id;
+
+    // Handle resume deletion
+    if (removePlatformResume && result.resume_path) {
+      await fetch(`/api/platforms/${platformId}/resume`, { method: 'DELETE' });
+      setPlatformResumePath(platformId, null);
+    }
+
+    // Handle resume upload
+    if (platformResumeFile) {
+      setIsUploadingResume(true);
+      const formData = new FormData();
+      formData.append('file', platformResumeFile);
+      const res = await fetch(`/api/platforms/${platformId}/resume`, { method: 'POST', body: formData });
+      setIsUploadingResume(false);
+      if (res.ok) {
+        const body = await res.json().catch(() => ({}));
+        setPlatformResumePath(platformId, (body.data?.resume_path as string | undefined) ?? null);
+      } else {
+        toast.error('Platform saved but resume upload failed');
+      }
+    }
+
     toast.success(isEdit ? 'Platform updated' : 'Platform added');
     onOpenChange(false);
   }
@@ -155,6 +186,68 @@ export function PlatformModal({ open, onOpenChange, platform }: PlatformModalPro
                 <Label htmlFor="p-notes">Notes</Label>
                 <Textarea id="p-notes" rows={3} {...register('notes')} />
               </div>
+
+              {/* ── Resume ── */}
+              <div className="space-y-1.5">
+                <Label>Resume</Label>
+                {/* Show existing resume (edit mode) unless marked for removal */}
+                {isEdit && platform?.resume_path && !removePlatformResume && !platformResumeFile && (
+                  <div className="flex items-center gap-2 rounded-md border border-border-app bg-surface-muted px-3 py-2">
+                    <FileTextIcon className="h-4 w-4 shrink-0 text-text-muted" />
+                    <span className="flex-1 truncate text-sm text-text-primary">{getResumeFilename(platform.resume_path)}</span>
+                    <button
+                      type="button"
+                      aria-label="Remove resume"
+                      onClick={() => setRemovePlatformResume(true)}
+                      className="text-text-muted hover:text-destructive"
+                    >
+                      <XIcon className="h-4 w-4" />
+                    </button>
+                  </div>
+                )}
+                {/* Show selected new file preview */}
+                {platformResumeFile && (
+                  <div className="flex items-center gap-2 rounded-md border border-brand-500/40 bg-brand-500/5 px-3 py-2">
+                    <FileTextIcon className="h-4 w-4 shrink-0 text-brand-500" />
+                    <span className="flex-1 truncate text-sm text-text-primary">{platformResumeFile.name}</span>
+                    <button
+                      type="button"
+                      aria-label="Remove selected file"
+                      onClick={() => { setPlatformResumeFile(null); if (resumeInputRef.current) resumeInputRef.current.value = ''; }}
+                      className="text-text-muted hover:text-destructive"
+                    >
+                      <XIcon className="h-4 w-4" />
+                    </button>
+                  </div>
+                )}
+                {/* Upload button */}
+                {!platformResumeFile && (
+                  <>
+                    <input
+                      ref={resumeInputRef}
+                      type="file"
+                      accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                      className="sr-only"
+                      id="p-resume"
+                      onChange={(e) => {
+                        const f = e.target.files?.[0];
+                        if (!f) return;
+                        if (f.size > 5 * 1024 * 1024) { toast.error('File exceeds 5MB limit'); return; }
+                        setPlatformResumeFile(f);
+                        setRemovePlatformResume(false);
+                      }}
+                    />
+                    <label
+                      htmlFor="p-resume"
+                      className="inline-flex cursor-pointer items-center gap-1.5 rounded-md border border-dashed border-border-app px-3 py-2 text-sm text-text-muted hover:border-brand-500 hover:text-brand-500 transition-colors"
+                    >
+                      <UploadIcon className="h-3.5 w-3.5" />
+                      {isEdit && platform?.resume_path && !removePlatformResume ? 'Replace resume' : 'Upload resume'}
+                    </label>
+                    <p className="text-xs text-text-muted mt-1">PDF, DOC or DOCX · max 5 MB. Jobs linked to this platform with pre-Applied status will be auto-updated.</p>
+                  </>
+                )}
+              </div>
             </div>
           )}
 
@@ -174,8 +267,12 @@ export function PlatformModal({ open, onOpenChange, platform }: PlatformModalPro
                 Next
               </Button>
             ) : (
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              <Button
+                type="button"
+                disabled={isSubmitting || isUploadingResume}
+                onClick={() => { void handleSubmit(onSubmit)(); }}
+              >
+                {(isSubmitting || isUploadingResume) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {isEdit ? 'Save changes' : 'Add platform'}
               </Button>
             )}

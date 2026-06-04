@@ -544,9 +544,17 @@ export function JobModal({ open, onOpenChange, job, userId }: JobModalProps) {
                   <Label>Resume</Label>
                   <ResumeSection jobId={job.id} initialResumePath={job.resume_path ?? null} />
                 </div>
-              ) : (
-                <p className="text-xs text-text-muted">You can upload a resume after saving this job.</p>
-              )}
+              ) : (() => {
+                const selectedPlatform = platforms.find((p) => p.id === watchPlatformId);
+                const platformHasResume = !!selectedPlatform?.resume_path;
+                return (
+                  <p className="text-xs text-text-muted">
+                    {platformHasResume
+                      ? `The resume from ${selectedPlatform!.name} will be auto-attached to this job.`
+                      : 'You can upload a resume after saving this job.'}
+                  </p>
+                );
+              })()}
 
               <div className="space-y-3">
                 <Label>Points of Contact</Label>

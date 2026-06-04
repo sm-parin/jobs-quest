@@ -82,5 +82,41 @@ export async function POST(request: NextRequest) {
     });
   }
 
+  // ── Auto-inherit platform resume when no explicit resume was provided ────────
+  if (job.source_platform_id && !job.resume_path) {
+    const { data: sourcePlatform } = await supabase
+      .from('platforms')
+      .select('resume_path')
+      .eq('id', job.source_platform_id)
+      .eq('user_id', user.id)
+      .single();
+
+    if (sourcePlatform?.resume_path) {
+      const filename = sourcePlatform.resume_path.split('/').pop() ?? 'resume';
+      const jobResumePath = `${user.id}/${job.id}/${filename}`;
+
+      const { data: fileBlob } = await supabase.storage
+        .from('resumes')
+        .download(sourcePlatform.resume_path);
+
+      if (fileBlob) {
+        const arrayBuffer = await fileBlob.arrayBuffer();
+        const { error: uploadErr } = await supabase.storage
+          .from('resumes')
+          .upload(jobResumePath, arrayBuffer, { upsert: true });
+
+        if (!uploadErr) {
+          await supabase
+            .from('jobs')
+            .update({ resume_path: jobResumePath })
+            .eq('id', job.id)
+            .eq('user_id', user.id);
+          // Reflect the inherited path in the response
+          (job as typeof job & { resume_path: string | null }).resume_path = jobResumePath;
+        }
+      }
+    }
+  }
+
   return NextResponse.json({ data: job }, { status: 201 });
 }

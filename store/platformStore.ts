@@ -12,6 +12,7 @@ interface PlatformStore {
   addPlatform: (values: PlatformValues) => Promise<Platform | null>;
   updatePlatform: (id: string, values: PlatformValues) => Promise<Platform | null>;
   deletePlatform: (id: string) => Promise<{ ok: boolean; error?: string }>;
+  setPlatformResumePath: (id: string, resumePath: string | null) => void;
 }
 
 export const usePlatformStore = create<PlatformStore>((set) => ({
@@ -68,5 +69,11 @@ export const usePlatformStore = create<PlatformStore>((set) => ({
     }
     const body = await res.json().catch(() => ({}));
     return { ok: false, error: body.error ?? 'Delete failed' };
+  },
+
+  setPlatformResumePath(id, resumePath) {
+    set((s) => ({
+      platforms: s.platforms.map((p) => (p.id === id ? { ...p, resume_path: resumePath } : p)),
+    }));
   },
 }));

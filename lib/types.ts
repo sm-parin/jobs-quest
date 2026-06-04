@@ -31,6 +31,7 @@ export interface Platform {
   last_application_date: string | null; // ISO date — managed by DB trigger
   personal_rating: number | null;       // 1-5
   notes: string | null;
+  resume_path: string | null;
   created_at: string;
   updated_at: string;
   // Joined relations (not DB columns)
@@ -48,6 +49,7 @@ export interface Status {
   label: string;
   color: string;
   order: number;
+  is_system: boolean;
   created_at: string;
   updated_at: string;
 }
