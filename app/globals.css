@@ -166,3 +166,32 @@
     @apply border-border outline-ring/50;
     transition: background-color 200ms ease, border-color 200ms ease, color 100ms ease;
   }
+
+  @layer base {
+    * {
+      @apply border-border outline-ring/50;
+      transition: background-color 200ms ease, border-color 200ms ease, color 100ms ease;
+    }
+
+    /* Exclude animated elements from theme transitions */
+    .transition-none,
+    [data-progress],
+    [data-skeleton] {
+      transition: none !important;
+    }
+
+    body {
+      @apply bg-background text-foreground;
+    }
+
+    html {
+      @apply font-sans;
+    }
+
+    /* Global focus-visible ring */
+    :focus-visible {
+      outline: 2px solid var(--color-brand-500);
+      outline-offset: 2px;
+    }
+  }
+}
