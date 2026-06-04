@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
     .eq('job_id', jobId)
     .order('created_at', { ascending: true });
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   return NextResponse.json({ data: data ?? [] });
 }
 
@@ -74,6 +74,6 @@ export async function POST(request: NextRequest) {
     .insert(rows)
     .select(CONTACT_SELECT);
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   return NextResponse.json({ data }, { status: 201 });
 }

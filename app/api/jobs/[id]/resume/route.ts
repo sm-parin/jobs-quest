@@ -1,3 +1,4 @@
+import path from 'path';
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
@@ -7,6 +8,22 @@ const ALLOWED_MIME_TYPES = new Set([
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
 ]);
 const MAX_BYTES = 5 * 1024 * 1024; // 5 MB
+
+// Magic byte signatures for each allowed MIME type (validates actual file content)
+const FILE_MAGIC: Record<string, number[][]> = {
+  'application/pdf': [[0x25, 0x50, 0x44, 0x46]], // %PDF
+  'application/msword': [[0xd0, 0xcf, 0x11, 0xe0]], // OLE2 compound document (DOC)
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': [
+    [0x50, 0x4b, 0x03, 0x04], // ZIP local file header (DOCX)
+  ],
+};
+
+async function hasMagicBytes(file: Blob, mimeType: string): Promise<boolean> {
+  const signatures = FILE_MAGIC[mimeType];
+  if (!signatures) return false;
+  const header = new Uint8Array(await file.slice(0, 8).arrayBuffer());
+  return signatures.some((sig) => sig.every((byte, i) => header[i] === byte));
+}
 
 interface Params {
   params: Promise<{ id: string }>;
@@ -50,7 +67,17 @@ export async function POST(request: NextRequest, { params }: Params) {
     return NextResponse.json({ error: 'File exceeds 5MB limit' }, { status: 400 });
   }
 
-  const filename = (file as File).name ?? `resume.${file.type.split('/').pop()}`;
+  // Validate actual file content matches the declared MIME type (prevents spoofed extensions)
+  if (!await hasMagicBytes(file, file.type)) {
+    return NextResponse.json(
+      { error: 'File content does not match the declared type' },
+      { status: 400 },
+    );
+  }
+
+  // Sanitize filename: strip path traversal and non-safe characters
+  const rawName = (file as File).name ?? `resume.${file.type.split('/').pop()}`;
+  const filename = path.basename(rawName).replace(/[^a-zA-Z0-9.\-_]/g, '_').slice(0, 200) || 'resume';
   const storagePath = `${user.id}/${jobId}/${filename}`;
 
   // Delete old resume from Storage if one exists
@@ -69,7 +96,7 @@ export async function POST(request: NextRequest, { params }: Params) {
 
   if (uploadError) {
     return NextResponse.json(
-      { error: 'Upload failed', details: uploadError.message },
+      { error: 'Upload failed' },
       { status: 500 },
     );
   }
@@ -84,7 +111,7 @@ export async function POST(request: NextRequest, { params }: Params) {
   if (dbError) {
     // Clean up orphaned file on DB failure
     await supabase.storage.from('resumes').remove([storagePath]);
-    return NextResponse.json({ error: dbError.message }, { status: 500 });
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 
   return NextResponse.json(

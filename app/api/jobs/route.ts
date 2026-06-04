@@ -23,7 +23,7 @@ export async function GET() {
     .eq('is_archived', false)
     .order('updated_at', { ascending: false });
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   return NextResponse.json({ data });
 }
 
@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
     .select(JOB_SELECT)
     .single();
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
 
   if (statusLabel) {
     await supabase.from('activity_log').insert({

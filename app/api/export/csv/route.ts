@@ -1,14 +1,16 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
-/** Wrap a single CSV field: escape quotes and wrap in quotes when necessary. */
+/** Wrap a single CSV field: escape quotes and neutralise formula injection. */
 function csvField(value: string | null | undefined): string {
   const str = value == null ? '' : String(value);
-  // Must quote if contains comma, newline, double-quote, or carriage return
-  if (str.includes(',') || str.includes('\n') || str.includes('\r') || str.includes('"')) {
-    return '"' + str.replace(/"/g, '""') + '"';
+  // Prefix formula-injection characters so spreadsheets treat the cell as plain text
+  const safe = /^[=+\-@\t\r]/.test(str) ? `'${str}` : str;
+  // Quote if the field contains commas, newlines, or double-quotes
+  if (safe.includes(',') || safe.includes('\n') || safe.includes('\r') || safe.includes('"')) {
+    return '"' + safe.replace(/"/g, '""') + '"';
   }
-  return str;
+  return safe;
 }
 
 const HEADERS = [
@@ -49,7 +51,7 @@ export async function GET() {
     .order('created_at', { ascending: false });
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 
   const jobs = (rawJobs ?? []) as unknown as JobRow[];

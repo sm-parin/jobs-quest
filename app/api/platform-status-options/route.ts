@@ -13,7 +13,7 @@ export async function GET() {
     .eq('user_id', user.id)
     .order('order', { ascending: true });
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   return NextResponse.json({ data });
 }
 
@@ -34,6 +34,6 @@ export async function POST(request: NextRequest) {
     .select('id, user_id, label, order, created_at, updated_at')
     .single();
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   return NextResponse.json({ data }, { status: 201 });
 }

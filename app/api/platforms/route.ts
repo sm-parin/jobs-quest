@@ -20,7 +20,7 @@ export async function GET() {
     .eq('user_id', user.id)
     .order('name', { ascending: true });
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
 
   const platformIds = (data ?? []).map((p: any) => p.id);
   const counts: Record<string, number> = {};
@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
     if (error.code === '23505') {
       return NextResponse.json({ error: 'A platform with this name already exists' }, { status: 409 });
     }
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
   return NextResponse.json({ data: { ...data, jobs_tracked: 0 } }, { status: 201 });
 }

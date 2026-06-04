@@ -123,6 +123,33 @@ function extractSalary(text: string): { value: string | null; confidence: 'high'
   return { value: null, confidence: null };
 }
 
+/** Block SSRF: only allow public HTTPS URLs (no private IPs, localhost, or link-local). */
+function isSafeUrl(rawUrl: string): boolean {
+  let parsed: URL;
+  try {
+    parsed = new URL(rawUrl);
+  } catch {
+    return false;
+  }
+  if (parsed.protocol !== 'https:') return false;
+  const host = parsed.hostname.toLowerCase().replace(/^\[|\]$/g, ''); // strip IPv6 brackets
+  if (host === 'localhost' || host === '0.0.0.0' || host === '::1') return false;
+  const ipv4 = host.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
+  if (ipv4) {
+    const [a, b] = [Number(ipv4[1]), Number(ipv4[2])];
+    if (
+      a === 10 ||
+      (a === 172 && b >= 16 && b <= 31) ||
+      (a === 192 && b === 168) ||
+      a === 127 ||
+      (a === 169 && b === 254) ||
+      a === 0 ||
+      (a === 100 && b >= 64 && b <= 127)
+    ) return false;
+  }
+  return true;
+}
+
 /** POST /api/jobs/extract — extract job details from text or URL */
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
@@ -146,6 +173,12 @@ export async function POST(request: NextRequest) {
   let htmlTitle: string | null = null;
 
   if (hasUrl) {
+    if (!isSafeUrl(body.url!)) {
+      return NextResponse.json(
+        { error: 'Invalid or disallowed URL.' },
+        { status: 400 },
+      );
+    }
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 10_000);
     let response: Response;
