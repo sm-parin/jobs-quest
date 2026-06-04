@@ -156,6 +156,9 @@ export async function POST(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
+  if (!request.headers.get('content-type')?.includes('application/json')) {
+    return NextResponse.json({ error: 'Content-Type must be application/json' }, { status: 415 });
+  }
   const body = await request.json().catch(() => null) as ExtractInput | null;
   if (!body) return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
 
@@ -167,6 +170,9 @@ export async function POST(request: NextRequest) {
   }
   if (hasText && hasUrl) {
     return NextResponse.json({ error: 'Provide either text or url, not both' }, { status: 400 });
+  }
+  if (hasText && body.text!.length > 100_000) {
+    return NextResponse.json({ error: 'Text input too large' }, { status: 400 });
   }
 
   let rawText: string;
@@ -183,7 +189,7 @@ export async function POST(request: NextRequest) {
     const timeout = setTimeout(() => controller.abort(), 10_000);
     let response: Response;
     try {
-      response = await fetch(body.url!, { signal: controller.signal });
+      response = await fetch(body.url!, { signal: controller.signal, redirect: 'error' });
     } catch {
       clearTimeout(timeout);
       return NextResponse.json(

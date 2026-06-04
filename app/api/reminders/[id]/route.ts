@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 const REMINDER_SELECT =
   'id, job_id, user_id, remind_at, is_done, created_at, updated_at, job:jobs(company, role, status:statuses(label, color))';
 
@@ -10,6 +12,7 @@ interface Params {
 
 export async function PATCH(req: NextRequest, { params }: Params) {
   const { id } = await params;
+  if (!UUID_RE.test(id)) return NextResponse.json({ error: 'Not found' }, { status: 404 });
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -29,13 +32,14 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     .single();
 
   if (error || !data) {
-    return NextResponse.json({ error: error?.message ?? 'Not found' }, { status: error ? 500 : 404 });
+    return NextResponse.json({ error: error ? 'Internal server error' : 'Not found' }, { status: error ? 500 : 404 });
   }
   return NextResponse.json({ data });
 }
 
 export async function DELETE(_req: NextRequest, { params }: Params) {
   const { id } = await params;
+  if (!UUID_RE.test(id)) return NextResponse.json({ error: 'Not found' }, { status: 404 });
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

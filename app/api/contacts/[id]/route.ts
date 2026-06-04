@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { contactInputSchema } from '@/lib/schemas';
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 const CONTACT_SELECT = 'id, job_id, user_id, name, designation, email, phone, created_at, updated_at';
 
 interface Params {
@@ -10,6 +12,7 @@ interface Params {
 
 export async function GET(_req: NextRequest, { params }: Params) {
   const { id } = await params;
+  if (!UUID_RE.test(id)) return NextResponse.json({ error: 'Not found' }, { status: 404 });
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -27,6 +30,7 @@ export async function GET(_req: NextRequest, { params }: Params) {
 
 export async function PATCH(request: NextRequest, { params }: Params) {
   const { id } = await params;
+  if (!UUID_RE.test(id)) return NextResponse.json({ error: 'Not found' }, { status: 404 });
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -41,6 +45,9 @@ export async function PATCH(request: NextRequest, { params }: Params) {
 
   if (!existing) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
+  if (!request.headers.get('content-type')?.includes('application/json')) {
+    return NextResponse.json({ error: 'Content-Type must be application/json' }, { status: 415 });
+  }
   const body = await request.json().catch(() => null);
   if (!body) return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
 
@@ -67,13 +74,14 @@ export async function PATCH(request: NextRequest, { params }: Params) {
     .single();
 
   if (error || !data) {
-    return NextResponse.json({ error: error?.message ?? 'Not found' }, { status: error ? 500 : 404 });
+    return NextResponse.json({ error: error ? 'Internal server error' : 'Not found' }, { status: error ? 500 : 404 });
   }
   return NextResponse.json({ data });
 }
 
 export async function DELETE(_req: NextRequest, { params }: Params) {
   const { id } = await params;
+  if (!UUID_RE.test(id)) return NextResponse.json({ error: 'Not found' }, { status: 404 });
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

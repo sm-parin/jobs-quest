@@ -2,6 +2,8 @@ import path from 'path';
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 const ALLOWED_MIME_TYPES = new Set([
   'application/pdf',
   'application/msword',
@@ -32,6 +34,7 @@ interface Params {
 /** POST /api/jobs/[id]/resume — upload a resume file */
 export async function POST(request: NextRequest, { params }: Params) {
   const { id: jobId } = await params;
+  if (!UUID_RE.test(jobId)) return NextResponse.json({ error: 'Not found' }, { status: 404 });
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -123,6 +126,7 @@ export async function POST(request: NextRequest, { params }: Params) {
 /** GET /api/jobs/[id]/resume — generate a 60-minute signed download URL */
 export async function GET(_req: NextRequest, { params }: Params) {
   const { id: jobId } = await params;
+  if (!UUID_RE.test(jobId)) return NextResponse.json({ error: 'Not found' }, { status: 404 });
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -157,6 +161,7 @@ export async function GET(_req: NextRequest, { params }: Params) {
 /** DELETE /api/jobs/[id]/resume — remove the resume file and clear resume_path */
 export async function DELETE(_req: NextRequest, { params }: Params) {
   const { id: jobId } = await params;
+  if (!UUID_RE.test(jobId)) return NextResponse.json({ error: 'Not found' }, { status: 404 });
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
