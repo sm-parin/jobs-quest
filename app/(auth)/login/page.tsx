@@ -1,5 +1,7 @@
 'use client';
 
+export const dynamic = 'force-dynamic';
+
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -15,7 +17,6 @@ import { Label } from '@/components/ui/label';
 
 export default function LoginPage() {
   const router = useRouter();
-  const supabase = createClient();
   const [serverError, setServerError] = useState<string | null>(null);
 
   const {
@@ -26,7 +27,7 @@ export default function LoginPage() {
 
   async function onSubmit(values: SignInValues) {
     setServerError(null);
-    const { error } = await supabase.auth.signInWithPassword(values);
+    const { error } = await createClient().auth.signInWithPassword(values);
     if (error) {
       setServerError(error.message);
       return;
@@ -36,7 +37,7 @@ export default function LoginPage() {
   }
 
   async function handleGoogleSignIn() {
-    await supabase.auth.signInWithOAuth({
+    await createClient().auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo: `${window.location.origin}/auth/callback` },
     });

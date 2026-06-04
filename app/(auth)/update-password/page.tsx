@@ -1,5 +1,7 @@
 'use client';
 
+export const dynamic = 'force-dynamic';
+
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -14,7 +16,6 @@ import { Label } from '@/components/ui/label';
 
 export default function UpdatePasswordPage() {
   const router = useRouter();
-  const supabase = createClient();
   const [serverError, setServerError] = useState<string | null>(null);
 
   const {
@@ -25,7 +26,7 @@ export default function UpdatePasswordPage() {
 
   async function onSubmit(values: UpdatePasswordValues) {
     setServerError(null);
-    const { error } = await supabase.auth.updateUser({ password: values.password });
+    const { error } = await createClient().auth.updateUser({ password: values.password });
     if (error) {
       setServerError(error.message);
       return;

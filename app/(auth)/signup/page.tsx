@@ -1,5 +1,7 @@
 'use client';
 
+export const dynamic = 'force-dynamic';
+
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -13,7 +15,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
 export default function SignupPage() {
-  const supabase = createClient();
   const [success, setSuccess] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
 
@@ -25,7 +26,7 @@ export default function SignupPage() {
 
   async function onSubmit(values: SignUpValues) {
     setServerError(null);
-    const { error } = await supabase.auth.signUp({
+    const { error } = await createClient().auth.signUp({
       email: values.email,
       password: values.password,
     });
@@ -37,7 +38,7 @@ export default function SignupPage() {
   }
 
   async function handleGoogleSignIn() {
-    await supabase.auth.signInWithOAuth({
+    await createClient().auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo: `${window.location.origin}/auth/callback` },
     });

@@ -1,5 +1,7 @@
 'use client';
 
+export const dynamic = 'force-dynamic';
+
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -13,7 +15,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
 export default function ResetPasswordPage() {
-  const supabase = createClient();
   const [success, setSuccess] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
 
@@ -25,7 +26,7 @@ export default function ResetPasswordPage() {
 
   async function onSubmit(values: ResetPasswordValues) {
     setServerError(null);
-    const { error } = await supabase.auth.resetPasswordForEmail(values.email, {
+    const { error } = await createClient().auth.resetPasswordForEmail(values.email, {
       redirectTo: `${window.location.origin}/auth/callback?next=/update-password`,
     });
     if (error) {
