@@ -48,13 +48,13 @@ function StatCard({
       tabIndex={onClick ? 0 : undefined}
       onKeyDown={onClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') onClick(); } : undefined}
       className={cn(
-        'relative flex min-w-[140px] flex-shrink-0 flex-col gap-2 rounded-md border border-border-app bg-surface p-4 transition-shadow',
+        'relative flex min-w-[152px] flex-shrink-0 flex-col gap-3 border border-border-app bg-surface p-5 transition-shadow',
         onClick && 'cursor-pointer hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500',
         className,
       )}
     >
       <div className="relative w-fit">
-        <Icon className="h-5 w-5 text-text-muted" />
+        <Icon className="h-4 w-4 text-text-muted" />
         {badge !== undefined && badge > 0 && (
           <span className="absolute -right-2 -top-2 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[9px] font-bold text-white">
             {badge > 9 ? '9+' : badge}
@@ -64,7 +64,7 @@ function StatCard({
       <div>
         <p
           className={cn(
-            'text-2xl font-bold text-text-primary leading-none',
+            'text-3xl font-light tracking-tight text-text-primary leading-none',
             highlight && 'text-brand-500',
           )}
         >
@@ -72,15 +72,15 @@ function StatCard({
         </p>
         {subtext && <p className="mt-0.5 text-xs text-text-muted">{subtext}</p>}
       </div>
-      <p className="text-xs font-medium uppercase tracking-wide text-text-muted">{label}</p>
+      <p className="text-[10px] font-semibold uppercase tracking-widest text-text-muted">{label}</p>
     </div>
   );
 }
 
 function SkeletonCard() {
   return (
-    <div className="flex min-w-[140px] flex-shrink-0 flex-col gap-2 rounded-md border border-border-app bg-surface p-4">
-      <Skeleton className="h-5 w-5 rounded" />
+    <div className="flex min-w-[152px] flex-shrink-0 flex-col gap-3 border border-border-app bg-surface p-5">
+      <Skeleton className="h-4 w-4 rounded" />
       <Skeleton className="h-7 w-12" />
       <Skeleton className="h-3 w-20" />
     </div>

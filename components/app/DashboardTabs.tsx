@@ -39,9 +39,9 @@ function TabButton({
       role="tab"
       aria-selected={active}
       className={cn(
-        'px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-1',
+        'px-5 py-3 text-[11px] font-semibold tracking-widest uppercase transition-colors border-b-2 -mb-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-1',
         active
-          ? 'border-brand-500 text-brand-600'
+          ? 'border-brand-500 text-text-primary'
           : 'border-transparent text-text-muted hover:text-text-primary',
       )}
     >

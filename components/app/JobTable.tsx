@@ -168,7 +168,7 @@ export function JobTable({
       onClick={() => setSort(key)}
       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setSort(key); }}
       className={cn(
-        'group/th select-none cursor-pointer whitespace-nowrap px-3 py-2.5 text-left text-xs font-medium text-text-muted hover:text-text-primary transition-colors',
+        'group/th select-none cursor-pointer whitespace-nowrap px-3 py-3 text-left text-xs font-semibold uppercase tracking-widest text-text-muted hover:text-text-primary transition-colors',
         className,
       )}
     >

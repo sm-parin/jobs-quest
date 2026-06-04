@@ -36,8 +36,8 @@ export function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
           return (
             <li key={href}>
               <Link href={href} onClick={onNavigate} aria-current={isActive ? 'page' : undefined}
-                className={cn('flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
-                  isActive ? 'bg-brand-50 text-brand-500' : 'text-text-muted hover:bg-surface-muted hover:text-text-primary')}>
+                className={cn('flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors',
+                  isActive ? 'bg-brand-50 text-brand-600 font-semibold' : 'text-text-muted hover:bg-surface-muted hover:text-text-primary')}>
                 <Icon className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
                 {label}
               </Link>
@@ -52,9 +52,9 @@ export function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
 export function AppSidebar() {
   return (
     <aside className="hidden lg:flex lg:w-60 lg:flex-col lg:border-r lg:border-border-app lg:bg-surface">
-      <div className="flex h-14 items-center gap-2 border-b border-border-app px-4">
-        <BriefcaseIcon className="h-5 w-5 text-brand-500" aria-hidden="true" />
-        <span className="font-semibold text-text-primary">Jobs Quest</span>
+      <div className="flex h-16 items-center gap-2 border-b border-border-app px-5">
+        <BriefcaseIcon className="h-4 w-4 text-brand-500" aria-hidden="true" />
+        <span className="text-sm font-semibold tracking-wide text-text-primary">Jobs Quest</span>
       </div>
       <div className="flex-1 overflow-y-auto p-3">
         <NavLinks />

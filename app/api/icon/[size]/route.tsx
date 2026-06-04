@@ -29,7 +29,7 @@ export async function GET(
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          background: '#3b82f6',
+          background: '#6366f1',
           borderRadius: radius,
         }}
       >

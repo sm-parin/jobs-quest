@@ -31,20 +31,20 @@ export function TopBar({ user }: TopBarProps) {
   const initials = user.email?.slice(0, 2).toUpperCase() ?? 'JQ';
 
   return (
-    <header className="flex h-14 items-center gap-3 border-b border-border-app bg-surface px-4">
+    <header className="flex h-16 items-center gap-4 border-b border-border-app bg-surface px-6">
       <Button variant="ghost" size="icon" className="lg:hidden" aria-label="Open navigation menu" onClick={() => setSheetOpen(true)}>
         <MenuIcon className="h-5 w-5" aria-hidden="true" />
       </Button>
       <div className="flex items-center gap-2 lg:hidden">
-        <BriefcaseIcon className="h-5 w-5 text-brand-500" aria-hidden="true" />
-        <span className="font-semibold text-text-primary">Jobs Quest</span>
+        <BriefcaseIcon className="h-4 w-4 text-brand-500" aria-hidden="true" />
+        <span className="text-sm font-semibold tracking-wide text-text-primary">Jobs Quest</span>
       </div>
       <div className="flex-1" />
       <ThemeToggle />
       <DropdownMenu>
         <DropdownMenuTrigger className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-          <Avatar className="h-8 w-8 cursor-pointer">
-            <AvatarFallback className="bg-brand-100 text-brand-700 text-xs font-semibold">{initials}</AvatarFallback>
+          <Avatar className="h-9 w-9 cursor-pointer">
+            <AvatarFallback className="bg-brand-100 text-brand-700 text-xs font-medium">{initials}</AvatarFallback>
           </Avatar>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-56">
@@ -61,9 +61,9 @@ export function TopBar({ user }: TopBarProps) {
       </DropdownMenu>
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
         <SheetContent side="left" className="w-60 bg-surface p-0">
-          <SheetHeader className="flex h-14 items-center gap-2 border-b border-border-app px-4">
-            <SheetTitle className="flex items-center gap-2 text-base">
-              <BriefcaseIcon className="h-5 w-5 text-brand-500" aria-hidden="true" />
+          <SheetHeader className="flex h-16 items-center gap-2 border-b border-border-app px-5">
+            <SheetTitle className="flex items-center gap-2 text-sm font-semibold tracking-wide">
+              <BriefcaseIcon className="h-4 w-4 text-brand-500" aria-hidden="true" />
               Jobs Quest
             </SheetTitle>
           </SheetHeader>

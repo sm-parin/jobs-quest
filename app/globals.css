@@ -44,22 +44,22 @@
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
 
-  /* Sprint design tokens — radii (fixed values from spec) */
-  --radius-sm: 0.25rem;
-  --radius-md: 0.5rem;
-  --radius-lg: 0.75rem;
+  /* Sprint design tokens — radii (minimal luxury: near-square) */
+  --radius-sm: 0.125rem;
+  --radius-md: 0.125rem;
+  --radius-lg: 0.125rem;
 
-  /* Brand palette — full 50–900 scale */
-  --color-brand-50: #eff6ff;
-  --color-brand-100: #dbeafe;
-  --color-brand-200: #bfdbfe;
-  --color-brand-300: #93c5fd;
-  --color-brand-400: #60a5fa;
-  --color-brand-500: #3b82f6;
-  --color-brand-600: #2563eb;
-  --color-brand-700: #1d4ed8;
-  --color-brand-800: #1e40af;
-  --color-brand-900: #1e3a5f;
+  /* Brand palette — indigo, full 50–900 scale */
+  --color-brand-50: #eef2ff;
+  --color-brand-100: #e0e7ff;
+  --color-brand-200: #c7d2fe;
+  --color-brand-300: #a5b4fc;
+  --color-brand-400: #818cf8;
+  --color-brand-500: #6366f1;
+  --color-brand-600: #4f46e5;
+  --color-brand-700: #4338ca;
+  --color-brand-800: #3730a3;
+  --color-brand-900: #312e81;
 
   /* Status badge palette */
   --color-status-saved: #94a3b8;
@@ -85,7 +85,7 @@
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
+  --primary: oklch(0.514 0.256 277);
   --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
@@ -96,13 +96,13 @@
   --destructive: oklch(0.577 0.245 27.325);
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  --ring: oklch(0.588 0.233 277);
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
+  --radius: 0.125rem;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
   --sidebar-primary: oklch(0.205 0 0);
@@ -114,10 +114,10 @@
 
   /* Sprint app-level semantic tokens (HSL channel values) */
   --app-surface: 0 0% 100%;
-  --app-surface-muted: 220 14% 96%;
-  --app-text-primary: 222 47% 11%;
-  --app-text-muted: 215 16% 47%;
-  --app-border: 220 13% 91%;
+  --app-surface-muted: 240 20% 97%;
+  --app-text-primary: 240 25% 10%;
+  --app-text-muted: 240 10% 46%;
+  --app-border: 240 18% 93%;
 }
 
 .dark {
@@ -127,8 +127,8 @@
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.205 0 0);
   --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
+  --primary: oklch(0.673 0.182 277);
+  --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.269 0 0);
   --secondary-foreground: oklch(0.985 0 0);
   --muted: oklch(0.269 0 0);
@@ -138,7 +138,7 @@
   --destructive: oklch(0.704 0.191 22.216);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
+  --ring: oklch(0.673 0.182 277);
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
@@ -154,11 +154,11 @@
   --sidebar-ring: oklch(0.556 0 0);
 
   /* Sprint app-level semantic tokens — dark mode */
-  --app-surface: 222 47% 11%;
-  --app-surface-muted: 217 33% 17%;
-  --app-text-primary: 210 40% 98%;
-  --app-text-muted: 215 20% 65%;
-  --app-border: 217 33% 25%;
+  --app-surface: 240 15% 7%;
+  --app-surface-muted: 240 12% 12%;
+  --app-text-primary: 240 5% 96%;
+  --app-text-muted: 240 6% 54%;
+  --app-border: 240 10% 18%;
 }
 
 @layer base {
