@@ -181,7 +181,9 @@ export function JobDetailClient({ job: initialJob, contacts: initialContacts, ac
             <h2 className="text-sm font-semibold text-text-primary">Details</h2>
             <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
               {job.location && (<><dt className="text-text-muted">Location</dt><dd className="text-text-primary">{job.location}</dd></>)}
+              {job.work_type && (<><dt className="text-text-muted">Type</dt><dd className="text-text-primary capitalize">{job.work_type}</dd></>)}
               {job.salary && (<><dt className="text-text-muted">Salary</dt><dd className="text-text-primary">{job.salary}</dd></>)}
+              {job.contact_email && (<><dt className="text-text-muted">Your email</dt><dd className="text-text-primary">{job.contact_email}</dd></>)}
               {job.source && (<><dt className="text-text-muted">Source</dt><dd className="text-text-primary">{job.source}</dd></>)}
               {job.url && (
                 <><dt className="text-text-muted">Job URL</dt>
@@ -197,7 +199,7 @@ export function JobDetailClient({ job: initialJob, contacts: initialContacts, ac
                 {descOpen ? 'Hide' : 'View'} job description
               </button>
               {descOpen && (
-                <div className="mt-3 max-h-72 overflow-y-auto rounded-md bg-surface-muted p-3 text-sm text-text-primary whitespace-pre-wrap">
+                <div className="mt-3 rounded-md bg-surface-muted p-3 text-sm text-text-primary whitespace-pre-wrap">
                   {job.job_description}
                 </div>
               )}

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ExternalLinkIcon, Loader2, Loader2Icon, PlusIcon, Trash2Icon, WandIcon } from 'lucide-react';
+import { ExternalLinkIcon, Loader2, PlusIcon, Trash2Icon } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { jobSchema, type JobValues } from '@/lib/schemas';
@@ -18,7 +18,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
-import { ExtractedFieldsPreview, type ExtractResult } from '@/components/app/ExtractedFieldsPreview';
 import { ResumeSection } from '@/components/app/ResumeSection';
 
 const PRIORITY_OPTIONS = [
@@ -56,13 +55,6 @@ export function JobModal({ open, onOpenChange, job, userId }: JobModalProps) {
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [removeResume, setRemoveResume] = useState(false);
 
-  // Job-description extraction state
-  const [extractUrl, setExtractUrl] = useState('');
-  const [extracting, setExtracting] = useState(false);
-  const [extractResult, setExtractResult] = useState<ExtractResult | null>(null);
-  const [extractError, setExtractError] = useState<string | null>(null);
-  const [showExtract, setShowExtract] = useState(false);
-
   const {
     register,
     handleSubmit,
@@ -82,11 +74,13 @@ export function JobModal({ open, onOpenChange, job, userId }: JobModalProps) {
       job_description: '',
       status_id: null,
       priority: 'medium' as const,
+      work_type: null,
       stage_date: '',
       stage_date_label: '',
       source_platform_id: null,
       source: '',
       salary: '',
+      contact_email: '',
       notes: '',
       resume: null,
       is_archived: false,
@@ -105,16 +99,19 @@ export function JobModal({ open, onOpenChange, job, userId }: JobModalProps) {
         job_description: job.job_description ?? '',
         status_id: job.status_id ?? null,
         priority: job.priority ?? 'medium',
+        work_type: job.work_type ?? null,
         stage_date: job.stage_date ?? '',
         stage_date_label: job.stage_date_label ?? '',
         source_platform_id: job.source_platform_id ?? null,
         source: job.source ?? '',
         salary: job.salary ?? '',
+        contact_email: job.contact_email ?? '',
         notes: job.notes ?? '',
         resume: null,
         is_archived: job.is_archived,
       });
     } else {
+      const savedEmail = typeof window !== 'undefined' ? (localStorage.getItem('jq_default_email') ?? '') : '';
       reset({
         company: '',
         role: '',
@@ -123,11 +120,13 @@ export function JobModal({ open, onOpenChange, job, userId }: JobModalProps) {
         job_description: '',
         status_id: null,
         priority: 'medium',
+        work_type: null,
         stage_date: '',
         stage_date_label: '',
         source_platform_id: null,
         source: '',
         salary: '',
+        contact_email: savedEmail,
         notes: '',
         resume: null,
         is_archived: false,
@@ -135,10 +134,6 @@ export function JobModal({ open, onOpenChange, job, userId }: JobModalProps) {
     }
     setResumeFile(null);
     setRemoveResume(false);
-    setExtractUrl('');
-    setExtractResult(null);
-    setExtractError(null);
-    setShowExtract(false);
     setContacts(
       job?.contacts
         ? job.contacts.map((c) => ({ id: c.id, name: c.name, designation: c.designation ?? '', email: c.email ?? '', phone: c.phone ?? '' }))
@@ -160,7 +155,8 @@ export function JobModal({ open, onOpenChange, job, userId }: JobModalProps) {
   const watchUrl = useWatch({ control, name: 'url' });
   const watchPriority = useWatch({ control, name: 'priority' });
   const watchPlatformId = useWatch({ control, name: 'source_platform_id' });
-  const watchJobDescription = useWatch({ control, name: 'job_description' });
+  const watchWorkType = useWatch({ control, name: 'work_type' });
+
 
   async function handleNext() {
     if (step === 1) {
@@ -210,11 +206,13 @@ export function JobModal({ open, onOpenChange, job, userId }: JobModalProps) {
         job_description: values.job_description || null,
         status_id: values.status_id || null,
         priority: values.priority,
+        work_type: values.work_type || null,
         stage_date: values.stage_date || null,
         stage_date_label: values.stage_date_label || null,
         source_platform_id: values.source_platform_id || null,
         source: values.source || null,
         salary: values.salary || null,
+        contact_email: values.contact_email || null,
         notes: values.notes || null,
         resume_path: resumePath,
         is_archived: values.is_archived ?? false,
@@ -288,44 +286,6 @@ export function JobModal({ open, onOpenChange, job, userId }: JobModalProps) {
     }
   }
 
-  async function runExtraction(payload: { text?: string; url?: string }) {
-    setExtracting(true);
-    setExtractResult(null);
-    setExtractError(null);
-    setShowExtract(true);
-    try {
-      const res = await fetch('/api/jobs/extract', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-      const body = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        setExtractError(body.error ?? 'Extraction failed');
-      } else {
-        setExtractResult(body.data as ExtractResult);
-      }
-    } catch {
-      setExtractError('Extraction failed. Please try again.');
-    } finally {
-      setExtracting(false);
-    }
-  }
-
-  function handleApplyField(field: 'company' | 'role' | 'location' | 'salary', value: string) {
-    setValue(field, value);
-  }
-
-  function handleApplyAll() {
-    if (!extractResult) return;
-    let count = 0;
-    if (extractResult.company) { setValue('company', extractResult.company); count++; }
-    if (extractResult.role) { setValue('role', extractResult.role); count++; }
-    if (extractResult.location) { setValue('location', extractResult.location); count++; }
-    if (extractResult.salary) { setValue('salary', extractResult.salary); count++; }
-    toast.success(`${count} field${count !== 1 ? 's' : ''} filled in`);
-  }
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto">
@@ -361,7 +321,7 @@ export function JobModal({ open, onOpenChange, job, userId }: JobModalProps) {
           })}
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form className="space-y-4">
 
           {/* ── Step 1: Job Details ── */}
           {step === 1 && (
@@ -385,6 +345,19 @@ export function JobModal({ open, onOpenChange, job, userId }: JobModalProps) {
               </div>
 
               <div className="space-y-1.5">
+                <Label>Type</Label>
+                <Select value={watchWorkType ?? ''} onValueChange={(v) => setValue('work_type', (v || null) as 'on-site' | 'remote' | 'hybrid' | null)}>
+                  <SelectTrigger><SelectValue placeholder="Select work type" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Not specified</SelectItem>
+                    <SelectItem value="on-site">On-site</SelectItem>
+                    <SelectItem value="remote">Remote</SelectItem>
+                    <SelectItem value="hybrid">Hybrid</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-1.5">
                 <Label htmlFor="j-url">Job posting URL</Label>
                 <div className="relative">
                   <Input id="j-url" type="url" placeholder="https://" {...register('url')} className="pr-9" />
@@ -399,64 +372,7 @@ export function JobModal({ open, onOpenChange, job, userId }: JobModalProps) {
 
               <div className="space-y-1.5">
                 <Label htmlFor="j-desc">Job Description</Label>
-                {/* Fetch from URL */}
-                <div className="flex gap-2">
-                  <Input
-                    type="url"
-                    placeholder="Paste posting URL to auto-fetch description…"
-                    value={extractUrl}
-                    onChange={(e) => setExtractUrl(e.target.value)}
-                    className="h-8 text-sm"
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    disabled={!extractUrl.trim() || extracting}
-                    onClick={() => runExtraction({ url: extractUrl.trim() })}
-                    className="h-8 shrink-0 gap-1.5 text-xs"
-                  >
-                    {extracting && !watchJobDescription ? <Loader2Icon className="h-3.5 w-3.5 animate-spin" /> : null}
-                    Fetch
-                  </Button>
-                </div>
-                {/* Textarea + Extract button */}
-                <div className="relative">
-                  <Textarea id="j-desc" rows={5} placeholder="Paste the job description here…" {...register('job_description')} />
-                  {watchJobDescription && watchJobDescription.length > 50 && (
-                    <button
-                      type="button"
-                      aria-label="Extract job details from description"
-                      onClick={() => runExtraction({ text: watchJobDescription })}
-                      disabled={extracting}
-                      className="absolute right-2 top-2 flex items-center gap-1 rounded bg-surface px-2 py-1 text-xs font-medium text-brand-500 shadow-sm border border-border-app hover:bg-surface-muted transition-colors disabled:opacity-50"
-                    >
-                      {extracting && watchJobDescription ? <Loader2Icon className="h-3 w-3 animate-spin" /> : <WandIcon className="h-3 w-3" />}
-                      Extract
-                    </button>
-                  )}
-                </div>
-                {/* Extraction preview */}
-                {showExtract && (
-                  <ExtractedFieldsPreview
-                    result={extractResult ?? { company: null, role: null, location: null, salary: null, confidence: { company: null, role: null, location: null, salary: null } }}
-                    loading={extracting}
-                    error={extractError}
-                    currentValues={{
-                      company: getValues('company') ?? '',
-                      role: getValues('role') ?? '',
-                      location: getValues('location') ?? '',
-                      salary: getValues('salary') ?? '',
-                    }}
-                    onApply={handleApplyField}
-                    onApplyAll={handleApplyAll}
-                    onDismiss={() => setShowExtract(false)}
-                    onRetry={() => {
-                      if (extractUrl.trim()) runExtraction({ url: extractUrl.trim() });
-                      else if (watchJobDescription) runExtraction({ text: watchJobDescription });
-                    }}
-                  />
-                )}
+                <Textarea id="j-desc" rows={4} placeholder="Paste the job description here…" {...register('job_description')} />
               </div>
             </div>
           )}
@@ -527,6 +443,13 @@ export function JobModal({ open, onOpenChange, job, userId }: JobModalProps) {
                   <Label htmlFor="j-salary">Salary / Range</Label>
                   <Input id="j-salary" placeholder="e.g. $90k–$120k" {...register('salary')} />
                 </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="j-contact-email">Your email</Label>
+                <Input id="j-contact-email" type="email" placeholder="you@example.com" {...register('contact_email')} />
+                {errors.contact_email && <p role="alert" className="text-xs text-destructive">{errors.contact_email.message as string}</p>}
+                <p className="text-xs text-text-muted">The email you used / plan to use for this application.</p>
               </div>
             </div>
           )}
@@ -609,7 +532,11 @@ export function JobModal({ open, onOpenChange, job, userId }: JobModalProps) {
                 Next
               </Button>
             ) : (
-              <Button type="submit" disabled={isSubmitting}>
+              <Button
+                type="button"
+                disabled={isSubmitting}
+                onClick={() => { void handleSubmit(onSubmit)(); }}
+              >
                 {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {isEdit ? 'Save changes' : 'Add job'}
               </Button>

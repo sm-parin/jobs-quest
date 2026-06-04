@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { StatusOptionRow } from '@/components/app/StatusOptionRow';
 import { ColorPicker } from '@/components/app/ColorPicker';
 import { WarningDialog } from '@/components/ui/WarningDialog';
@@ -95,10 +96,13 @@ export default function SettingsPage() {
   const [platformStatuses, setPlatformStatuses] = useState<PlatformStatusOption[]>([]);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; type: 'job' | 'platform'; label: string; count?: number } | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [defaultEmail, setDefaultEmail] = useState('');
+  const [savingEmail, setSavingEmail] = useState(false);
 
   useEffect(() => {
     fetch('/api/statuses').then((r) => r.json()).then(({ data }) => setJobStatuses(data ?? []));
     fetch('/api/platform-status-options').then((r) => r.json()).then(({ data }) => setPlatformStatuses(data ?? []));
+    setDefaultEmail(localStorage.getItem('jq_default_email') ?? '');
   }, []);
 
   const addJobStatus = useCallback(async (label: string, color?: string) => {
@@ -178,6 +182,13 @@ export default function SettingsPage() {
     ? `${deleteTarget.count} ${deleteTarget.type === 'job' ? 'job' : 'platform'}${deleteTarget.count === 1 ? '' : 's'} use "${deleteTarget.label}". Reassign them before deleting.`
     : `Are you sure you want to delete "${deleteTarget?.label}"? This cannot be undone.`;
 
+  function saveDefaultEmail() {
+    setSavingEmail(true);
+    localStorage.setItem('jq_default_email', defaultEmail);
+    toast.success('Saved');
+    setSavingEmail(false);
+  }
+
   return (
     <section aria-labelledby="settings-heading">
       <h1 id="settings-heading" className="mb-6 text-2xl font-semibold text-text-primary">Settings</h1>
@@ -185,6 +196,7 @@ export default function SettingsPage() {
         <TabsList className="mb-6">
           <TabsTrigger value="job-statuses">Job Statuses</TabsTrigger>
           <TabsTrigger value="platform-statuses">Platform Statuses</TabsTrigger>
+          <TabsTrigger value="profile">Profile</TabsTrigger>
         </TabsList>
         <TabsContent value="job-statuses">
           <p className="mb-4 text-sm text-text-muted">Manage the statuses that appear in your job pipeline. Drag to reorder.</p>
@@ -193,6 +205,24 @@ export default function SettingsPage() {
         <TabsContent value="platform-statuses">
           <p className="mb-4 text-sm text-text-muted">Manage the profile status options shown in the Platforms page. Drag to reorder.</p>
           <StatusList items={platformStatuses} showColor={false} onAdd={addPlatformStatus} onEdit={editPlatformStatus} onDelete={deletePlatformStatus} onReorder={reorderPlatformStatuses} />
+        </TabsContent>
+        <TabsContent value="profile">
+          <div className="max-w-md space-y-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="default-email">Default email for applications</Label>
+              <p className="text-xs text-text-muted">Pre-filled when adding new jobs.</p>
+              <Input
+                id="default-email"
+                type="email"
+                value={defaultEmail}
+                onChange={(e) => setDefaultEmail(e.target.value)}
+                placeholder="you@example.com"
+              />
+            </div>
+            <Button onClick={saveDefaultEmail} disabled={savingEmail} size="sm">
+              {savingEmail ? 'Saving…' : 'Save'}
+            </Button>
+          </div>
         </TabsContent>
       </Tabs>
       <WarningDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)} title="Delete Status" description={warningDescription}

@@ -68,7 +68,9 @@ export interface Job {
   source_platform_id: string | null;
   status_id: string | null;
   priority: Priority;
+  work_type: 'on-site' | 'remote' | 'hybrid' | null;
   salary: string | null;
+  contact_email: string | null;
   stage_date: string | null;
   stage_date_label: string | null;
   notes: string | null;

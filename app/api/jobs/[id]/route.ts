@@ -6,7 +6,8 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 
 const JOB_SELECT = `
   id, user_id, company, role, location, url, source, source_platform_id,
-  status_id, priority, salary, stage_date, stage_date_label, notes,
+  status_id, priority, work_type, salary, contact_email,
+  stage_date, stage_date_label, notes,
   resume_path, job_description, is_archived, created_at, updated_at,
   status:statuses(id, label, color),
   platform:platforms(id, name),

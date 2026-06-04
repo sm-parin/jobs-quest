@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ArrowUpDownIcon, ExternalLinkIcon, PencilIcon, StarIcon, Trash2Icon } from 'lucide-react';
+import { ArrowUpDownIcon, ExternalLinkIcon, FileTextIcon, PencilIcon, StarIcon, Trash2Icon } from 'lucide-react';
 import { toast } from 'sonner';
 
 import type { Platform } from '@/lib/types';
@@ -108,6 +108,7 @@ export function PlatformTable({ platforms, isLoading }: PlatformTableProps) {
               <th className="px-4 py-2.5 text-left"><SortButton label="Rating" sortBy="personal_rating" /></th>
               <th className="px-4 py-2.5 text-right"><SortButton label="Jobs" sortBy="jobs_tracked" /></th>
               <th className="hidden px-4 py-2.5 text-left md:table-cell"><SortButton label="Last Applied" sortBy="last_application_date" /></th>
+              <th className="px-4 py-2.5 text-left text-xs font-medium text-text-muted">Resume</th>
               <th className="px-4 py-2.5 text-right text-xs font-medium text-text-muted">Actions</th>
             </tr>
           </thead>
@@ -134,6 +135,17 @@ export function PlatformTable({ platforms, isLoading }: PlatformTableProps) {
                 <td className="px-4 py-3"><StarDisplay rating={p.personal_rating} /></td>
                 <td className="px-4 py-3 text-right text-text-muted">{p.jobs_tracked ?? 0}</td>
                 <td className="hidden px-4 py-3 text-text-muted md:table-cell">{formatDate(p.last_application_date)}</td>
+                <td className="px-4 py-3">
+                  {p.resume_path ? (
+                    <button type="button" onClick={async () => {
+                      const res = await fetch(`/api/platforms/${p.id}/resume`);
+                      if (res.ok) { const { url } = await res.json() as { url: string }; window.open(url, '_blank'); }
+                      else toast.error('Failed to load resume');
+                    }} className="flex items-center gap-1 text-xs text-brand-500 hover:underline">
+                      <FileTextIcon className="h-3.5 w-3.5" />View
+                    </button>
+                  ) : <span className="text-text-muted">—</span>}
+                </td>
                 <td className="px-4 py-3">
                   <div className="flex items-center justify-end gap-1">
                     <Button variant="ghost" size="icon" aria-label={`Edit ${p.name}`} onClick={() => setEditTarget(p)}><PencilIcon className="h-4 w-4" /></Button>
