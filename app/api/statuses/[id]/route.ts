@@ -19,15 +19,13 @@ export async function PATCH(
   const body = await request.json();
   const { label, color, order } = body;
 
-  // Block label/color edits for system statuses
+  // Block label/color edits for system statuses (same dual-query pattern as DELETE)
   if (label !== undefined || color !== undefined) {
-    const { data: existing } = await supabase
-      .from('statuses')
-      .select('is_system')
-      .eq('id', id)
-      .eq('user_id', user.id)
-      .single();
-    if (existing?.is_system) {
+    const [{ data: labelRow }, { data: sysRow }] = await Promise.all([
+      supabase.from('statuses').select('label').eq('id', id).eq('user_id', user.id).single(),
+      supabase.from('statuses').select('is_system').eq('id', id).eq('user_id', user.id).single(),
+    ]);
+    if (sysRow?.is_system || labelRow?.label?.toLowerCase() === 'applied') {
       return NextResponse.json({ error: 'This status cannot be modified' }, { status: 403 });
     }
   }
@@ -55,15 +53,14 @@ export async function DELETE(
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  // Block deletion of system statuses
-  const { data: existing } = await supabase
-    .from('statuses')
-    .select('is_system')
-    .eq('id', id)
-    .eq('user_id', user.id)
-    .single();
-  if (existing?.is_system) {
-    return NextResponse.json({ error: 'This status cannot be deleted' }, { status: 403 });
+  // Block deletion of system statuses.
+  // Two parallel queries: `label` always works; `is_system` requires migration 004.
+  const [{ data: labelRow }, { data: sysRow }] = await Promise.all([
+    supabase.from('statuses').select('label').eq('id', id).eq('user_id', user.id).single(),
+    supabase.from('statuses').select('is_system').eq('id', id).eq('user_id', user.id).single(),
+  ]);
+  if (sysRow?.is_system || labelRow?.label?.toLowerCase() === 'applied') {
+    return NextResponse.json({ error: 'The Applied status cannot be deleted' }, { status: 403 });
   }
 
   const { count } = await supabase

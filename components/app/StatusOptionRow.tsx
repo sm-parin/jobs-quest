@@ -145,7 +145,7 @@ export function StatusOptionRow({
               <X className="h-3 w-3" />
             </Button>
           </>
-        ) : item.is_system ? (
+        ) : (item.is_system || item.label?.toLowerCase() === 'applied') ? (
           <div className="flex items-center gap-1 px-1" title="System status — cannot be edited or deleted">
             <LockIcon className="h-3 w-3 text-text-muted" aria-hidden />
             <span className="text-[10px] text-text-muted font-medium">System</span>
