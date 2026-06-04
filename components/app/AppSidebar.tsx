@@ -2,13 +2,12 @@
 
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { BriefcaseIcon, ArchiveIcon, SettingsIcon, LayoutGridIcon } from 'lucide-react';
+import { BriefcaseIcon, SettingsIcon, LayoutGridIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const NAV_ITEMS = [
   { href: '/dashboard', label: 'Dashboard', icon: BriefcaseIcon },
   { href: '/dashboard/platforms', label: 'Platforms', icon: LayoutGridIcon },
-  { href: '/dashboard?tab=archived', label: 'Archived', icon: ArchiveIcon },
   { href: '/dashboard/settings', label: 'Settings', icon: SettingsIcon },
 ];
 
