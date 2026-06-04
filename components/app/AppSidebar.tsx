@@ -1,24 +1,38 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { BriefcaseIcon, ArchiveIcon, SettingsIcon, LayoutGridIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const NAV_ITEMS = [
   { href: '/dashboard', label: 'Dashboard', icon: BriefcaseIcon },
   { href: '/dashboard/platforms', label: 'Platforms', icon: LayoutGridIcon },
-  { href: '/dashboard/archived', label: 'Archived', icon: ArchiveIcon },
+  { href: '/dashboard?tab=archived', label: 'Archived', icon: ArchiveIcon },
   { href: '/dashboard/settings', label: 'Settings', icon: SettingsIcon },
-] as const;
+];
 
 export function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const tab = searchParams.get('tab');
+
   return (
     <nav aria-label="Main navigation">
       <ul className="space-y-1">
         {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
-          const isActive = pathname === href || (href !== '/dashboard' && pathname.startsWith(href));
+          const [hrefPath, hrefQuery] = href.split('?');
+          let isActive: boolean;
+          if (hrefQuery) {
+            // Match both path and the tab query param
+            const expected = new URLSearchParams(hrefQuery).get('tab');
+            isActive = pathname === hrefPath && tab === expected;
+          } else if (hrefPath === '/dashboard') {
+            // Dashboard is active only when no tab param is set
+            isActive = pathname === '/dashboard' && !tab;
+          } else {
+            isActive = pathname === hrefPath || pathname.startsWith(hrefPath + '/');
+          }
           return (
             <li key={href}>
               <Link href={href} onClick={onNavigate} aria-current={isActive ? 'page' : undefined}
