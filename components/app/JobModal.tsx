@@ -25,6 +25,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Combobox, type ComboboxOption } from '@/components/ui/combobox';
 import { cn } from '@/lib/utils';
 
 const PRIORITY_OPTIONS = [
@@ -174,15 +175,6 @@ export function JobModal({ open, onOpenChange, job, initialReminder, userId }: J
   const watchPriority = useWatch({ control, name: 'priority' });
   const watchPlatformId = useWatch({ control, name: 'source_platform_id' });
   const watchWorkType = useWatch({ control, name: 'work_type' });
-
-  const [selectedPlatformValue, setSelectedPlatformValue] = useState<string>(watchPlatformId ?? '');
-  const [showCustomPlatform, setShowCustomPlatform] = useState<boolean>(false);
-
-  useEffect(() => {
-    setSelectedPlatformValue(watchPlatformId ?? '');
-    setShowCustomPlatform(!watchPlatformId && !!getValues('source'));
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [watchPlatformId]);
 
   // Auto-fill stage fields when status changes
   useEffect(() => {
@@ -500,53 +492,27 @@ export function JobModal({ open, onOpenChange, job, initialReminder, userId }: J
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="j-platform">Platform</Label>
-                  <Select value={selectedPlatformValue ?? ''} onValueChange={(v: string | null) => {
-                    if (v === '__custom__') {
-                      // switch to free-text mode
-                      setShowCustomPlatform(true);
-                      setSelectedPlatformValue(v);
-                      setValue('source_platform_id', null);
-                      setValue('source', '');
-                    } else if (v) {
-                      setShowCustomPlatform(false);
-                      setSelectedPlatformValue(v);
-                      setValue('source_platform_id', v);
-                      // if selecting an existing platform, clear free-text source
-                      setValue('source', null);
-                    } else {
-                      setShowCustomPlatform(false);
-                      setSelectedPlatformValue('');
-                      setValue('source_platform_id', null);
-                      setValue('source', null);
-                    }
-                  }}>
-                    <SelectTrigger id="j-platform">
-                      <span className="truncate">
-                        {selectedPlatformValue && selectedPlatformValue !== '__custom__'
-                          ? platforms.find((p) => p.id === selectedPlatformValue)?.name
-                          : selectedPlatformValue === '__custom__'
-                            ? 'Other (custom)'
-                            : 'Select platform'
+                  <Combobox
+                    options={platforms.map((p) => ({ value: p.id, label: p.name }))}
+                    value={watchPlatformId ?? ''}
+                    onValueChange={(v: string | null) => {
+                      if (v) {
+                        // Check if it's an existing platform ID
+                        if (platforms.some((p) => p.id === v)) {
+                          setValue('source_platform_id', v);
+                          setValue('source', null);
+                        } else {
+                          // It's custom text
+                          setValue('source_platform_id', null);
+                          setValue('source', v);
                         }
-                      </span>
-                      <SelectValue className="sr-only">{platforms.find((p) => p.id === selectedPlatformValue)?.name ?? ''}</SelectValue>
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="">None</SelectItem>
-                      {platforms.map((p) => (
-                        <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-                      ))}
-                      <SelectItem value="__custom__">Other (add custom platform)</SelectItem>
-                    </SelectContent>
-                  </Select>
-
-                  {showCustomPlatform && (
-                    <div className="mt-2">
-                      <Label className="text-xs">Custom platform</Label>
-                      <Input placeholder="Enter platform name" value={getValues('source') ?? ''} onChange={(e) => setValue('source', e.target.value)} />
-                      <p className="text-xs text-text-muted mt-1">This will be saved as the job source. You can later add it as a platform.</p>
-                    </div>
-                  )}
+                      } else {
+                        setValue('source_platform_id', null);
+                        setValue('source', null);
+                      }
+                    }}
+                    placeholder="Select or type platform..."
+                  />
                 </div>
               </div>
 

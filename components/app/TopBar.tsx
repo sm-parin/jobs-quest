@@ -11,7 +11,6 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { NavLinks } from '@/components/app/AppSidebar';
-import { StatsBar } from '@/components/app/StatsBar';
 import { ThemeToggle } from '@/components/app/ThemeToggle';
 
 interface TopBarProps {
@@ -69,9 +68,6 @@ export function TopBar({ user }: TopBarProps) {
             </SheetTitle>
           </SheetHeader>
           <div className="p-3">
-            <div className="hidden lg:block mb-3">
-              <StatsBar onArchivedClick={() => setSheetOpen(false)} />
-            </div>
             <NavLinks onNavigate={() => setSheetOpen(false)} />
           </div>
         </SheetContent>
