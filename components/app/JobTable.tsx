@@ -248,7 +248,19 @@ export function JobTable({
 
         {/* Platform */}
         <td className="w-[110px] px-3 py-3">
-          <span className="text-sm text-text-muted truncate block">{job.platform?.name ?? '—'}</span>
+          {job.url ? (
+            <a
+              href={job.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="text-sm text-text-muted truncate block hover:text-brand-500"
+            >
+              {job.platform?.name ?? '—'}
+            </a>
+          ) : (
+            <span className="text-sm text-text-muted truncate block">{job.platform?.name ?? '—'}</span>
+          )}
         </td>
 
         {/* Type */}

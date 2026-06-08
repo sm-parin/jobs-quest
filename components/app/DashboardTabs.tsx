@@ -76,9 +76,21 @@ export function DashboardTabs({
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
   }
 
+  const [statsExpanded, setStatsExpanded] = useState(false);
+
   return (
     <div className="space-y-4">
-      <StatsBar onArchivedClick={() => setTab('archived')} />
+      {/* Mobile / tablet: collapsible stats at top. Desktop: stats live in the left sheet. */}
+      <div className="lg:hidden">
+        <div className={cn('relative overflow-hidden transition-all', statsExpanded ? 'max-h-[1000px]' : 'max-h-20')}>
+          <StatsBar onArchivedClick={() => setTab('archived')} />
+        </div>
+        <div className="flex justify-center mt-2">
+          <button type="button" onClick={() => setStatsExpanded((s) => !s)} className="text-xs text-text-muted">
+            {statsExpanded ? 'Collapse stats' : 'Show more stats'}
+          </button>
+        </div>
+      </div>
 
       <OverdueBanner />
 

@@ -1,7 +1,6 @@
 import { redirect } from 'next/navigation';
 import { Suspense } from 'react';
 import { createClient } from '@/lib/supabase/server';
-import { AppSidebar } from '@/components/app/AppSidebar';
 import { TopBar } from '@/components/app/TopBar';
 import { NavigationProgress } from '@/components/ui/NavigationProgress';
 
@@ -28,7 +27,6 @@ export default async function DashboardLayout({
       >
         Skip to main content
       </a>
-      <AppSidebar />
       <div className="flex flex-1 flex-col overflow-hidden">
         <TopBar user={user} />
         <main id="main-content" className="flex-1 overflow-y-auto p-4 lg:p-6">{children}</main>

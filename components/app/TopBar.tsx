@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { NavLinks } from '@/components/app/AppSidebar';
+import { StatsBar } from '@/components/app/StatsBar';
 import { ThemeToggle } from '@/components/app/ThemeToggle';
 
 interface TopBarProps {
@@ -32,10 +33,10 @@ export function TopBar({ user }: TopBarProps) {
 
   return (
     <header className="flex h-16 items-center gap-4 border-b border-border-app bg-surface px-6">
-      <Button variant="ghost" size="icon" className="lg:hidden" aria-label="Open navigation menu" onClick={() => setSheetOpen(true)}>
+      <Button variant="ghost" size="icon" aria-label="Open navigation menu" onClick={() => setSheetOpen(true)}>
         <MenuIcon className="h-5 w-5" aria-hidden="true" />
       </Button>
-      <div className="flex items-center gap-2 lg:hidden">
+      <div className="flex items-center gap-2">
         <BriefcaseIcon className="h-4 w-4 text-brand-500" aria-hidden="true" />
         <span className="text-sm font-semibold tracking-wide text-text-primary">Jobs Quest</span>
       </div>
@@ -60,14 +61,19 @@ export function TopBar({ user }: TopBarProps) {
         </DropdownMenuContent>
       </DropdownMenu>
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-        <SheetContent side="left" className="w-60 bg-surface p-0">
+        <SheetContent side="left" className="w-72 bg-surface p-0">
           <SheetHeader className="flex h-16 items-center gap-2 border-b border-border-app px-5">
             <SheetTitle className="flex items-center gap-2 text-sm font-semibold tracking-wide">
               <BriefcaseIcon className="h-4 w-4 text-brand-500" aria-hidden="true" />
               Jobs Quest
             </SheetTitle>
           </SheetHeader>
-          <div className="p-3"><NavLinks onNavigate={() => setSheetOpen(false)} /></div>
+          <div className="p-3">
+            <div className="hidden lg:block mb-3">
+              <StatsBar onArchivedClick={() => setSheetOpen(false)} />
+            </div>
+            <NavLinks onNavigate={() => setSheetOpen(false)} />
+          </div>
         </SheetContent>
       </Sheet>
     </header>

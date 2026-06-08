@@ -144,7 +144,12 @@ export function PlatformModal({ open, onOpenChange, platform }: PlatformModalPro
               <div className="space-y-1.5">
                 <Label htmlFor="p-status">Profile Status</Label>
                 <Select value={watch('profile_status_id') ?? ''} onValueChange={(v) => setValue('profile_status_id', v || null)}>
-                  <SelectTrigger id="p-status"><SelectValue placeholder="Select status" /></SelectTrigger>
+                  <SelectTrigger id="p-status">
+                    <span className="truncate">
+                      {watch('profile_status_id') ? platformStatusOptions.find((o) => o.id === watch('profile_status_id'))?.label : 'Select status'}
+                    </span>
+                    <SelectValue className="sr-only">{platformStatusOptions.find((o) => o.id === watch('profile_status_id'))?.label ?? ''}</SelectValue>
+                  </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="">None</SelectItem>
                     {platformStatusOptions.map((opt) => (

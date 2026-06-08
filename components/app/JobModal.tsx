@@ -175,6 +175,15 @@ export function JobModal({ open, onOpenChange, job, initialReminder, userId }: J
   const watchPlatformId = useWatch({ control, name: 'source_platform_id' });
   const watchWorkType = useWatch({ control, name: 'work_type' });
 
+  const [selectedPlatformValue, setSelectedPlatformValue] = useState<string>(watchPlatformId ?? '');
+  const [showCustomPlatform, setShowCustomPlatform] = useState<boolean>(false);
+
+  useEffect(() => {
+    setSelectedPlatformValue(watchPlatformId ?? '');
+    setShowCustomPlatform(!watchPlatformId && !!getValues('source'));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [watchPlatformId]);
+
   // Auto-fill stage fields when status changes
   useEffect(() => {
     if (!watchStatusId) return;
@@ -463,7 +472,19 @@ export function JobModal({ open, onOpenChange, job, initialReminder, userId }: J
                 <div className="space-y-1.5">
                   <Label htmlFor="j-status">Status</Label>
                   <Select value={watchStatusId ?? ''} onValueChange={(v) => setValue('status_id', v || null)}>
-                    <SelectTrigger id="j-status"><SelectValue placeholder="Select status" /></SelectTrigger>
+                    <SelectTrigger id="j-status">
+                      <span className="flex items-center gap-2 truncate">
+                        {watchStatusId ? (
+                          <>
+                            <span className="inline-block h-2 w-2 rounded-full" style={{ backgroundColor: statuses.find((x) => x.id === watchStatusId)?.color }} />
+                            <span className="truncate">{statuses.find((x) => x.id === watchStatusId)?.label}</span>
+                          </>
+                        ) : (
+                          <span className="text-muted-foreground">Select status</span>
+                        )}
+                      </span>
+                      <SelectValue className="sr-only">{statuses.find((x) => x.id === watchStatusId)?.label ?? ''}</SelectValue>
+                    </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="">None</SelectItem>
                       {statuses.map((s) => (
@@ -479,15 +500,48 @@ export function JobModal({ open, onOpenChange, job, initialReminder, userId }: J
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="j-platform">Platform</Label>
-                  <Select value={watchPlatformId ?? ''} onValueChange={(v) => setValue('source_platform_id', v || null)}>
-                    <SelectTrigger id="j-platform"><SelectValue placeholder="Select platform" /></SelectTrigger>
+                  <Select value={selectedPlatformValue ?? ''} onValueChange={(v) => {
+                    if (v === '__custom__') {
+                      // switch to free-text mode
+                      setShowCustomPlatform(true);
+                      setSelectedPlatformValue(v);
+                      setValue('source_platform_id', null);
+                      setValue('source', '');
+                    } else {
+                      setShowCustomPlatform(false);
+                      setSelectedPlatformValue(v);
+                      setValue('source_platform_id', v || null);
+                      // if selecting an existing platform, clear free-text source
+                      setValue('source', null);
+                    }
+                  }}>
+                    <SelectTrigger id="j-platform">
+                      <span className="truncate">
+                        {selectedPlatformValue && selectedPlatformValue !== '__custom__'
+                          ? platforms.find((p) => p.id === selectedPlatformValue)?.name
+                          : selectedPlatformValue === '__custom__'
+                            ? 'Other (custom)'
+                            : 'Select platform'
+                        }
+                      </span>
+                      <SelectValue className="sr-only">{platforms.find((p) => p.id === selectedPlatformValue)?.name ?? ''}</SelectValue>
+                    </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="">None</SelectItem>
                       {platforms.map((p) => (
                         <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
                       ))}
+                      <SelectItem value="__custom__">Other (add custom platform)</SelectItem>
                     </SelectContent>
                   </Select>
+
+                  {showCustomPlatform && (
+                    <div className="mt-2">
+                      <Label className="text-xs">Custom platform</Label>
+                      <Input placeholder="Enter platform name" value={getValues('source') ?? ''} onChange={(e) => setValue('source', e.target.value)} />
+                      <p className="text-xs text-text-muted mt-1">This will be saved as the job source. You can later add it as a platform.</p>
+                    </div>
+                  )}
                 </div>
               </div>
 
