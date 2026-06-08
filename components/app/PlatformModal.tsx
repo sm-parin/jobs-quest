@@ -126,7 +126,7 @@ export function PlatformModal({ open, onOpenChange, platform }: PlatformModalPro
           })}
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form className="space-y-4">
 
           {/* ── Step 1: Platform Info ── */}
           {step === 1 && (

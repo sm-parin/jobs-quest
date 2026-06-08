@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { contactBatchSchema } from '@/lib/schemas';
 
-const CONTACT_SELECT = 'id, job_id, user_id, name, designation, email, phone, created_at, updated_at';
+const CONTACT_SELECT = 'id, job_id, user_id, name, designation, role, platform, contact_methods, email, phone, created_at, updated_at';
 
 export async function GET(request: NextRequest) {
   const supabase = await createClient();
@@ -63,11 +63,14 @@ export async function POST(request: NextRequest) {
 
   if (!job) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
-  const rows = contacts.map(({ name, designation, email, phone }) => ({
+  const rows = contacts.map(({ name, designation, role, platform, contact_methods, email, phone }) => ({
     user_id: user.id,
     job_id,
     name,
     designation: designation || null,
+    role: role || null,
+    platform: platform || null,
+    contact_methods: contact_methods ?? [],
     email: email || null,
     phone: phone || null,
   }));

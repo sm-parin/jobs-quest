@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { ArrowUpDownIcon, ExternalLinkIcon, FileTextIcon, PencilIcon, StarIcon, Trash2Icon } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { ExternalLinkIcon, FileTextIcon, PencilIcon, StarIcon, Trash2Icon } from 'lucide-react';
 import { toast } from 'sonner';
 
 import type { Platform } from '@/lib/types';
@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { WarningDialog } from '@/components/ui/WarningDialog';
+import { ColumnFilter, type FilterOption } from '@/components/ui/ColumnFilter';
 import { PlatformModal } from '@/components/app/PlatformModal';
 import { cn } from '@/lib/utils';
 
@@ -30,6 +31,8 @@ function StarDisplay({ rating }: { rating: number | null }) {
   );
 }
 
+const RATING_OPTIONS: FilterOption[] = [1, 2, 3, 4, 5].map((n) => ({ value: String(n), label: '★'.repeat(n) }));
+
 interface PlatformTableProps {
   platforms: Platform[];
   isLoading: boolean;
@@ -43,19 +46,78 @@ export function PlatformTable({ platforms, isLoading }: PlatformTableProps) {
   const [deleteTarget, setDeleteTarget] = useState<Platform | null>(null);
   const [deleting, setDeleting] = useState(false);
 
-  function toggleSort(key: SortKey) {
-    if (sortKey === key) setSortAsc((v) => !v);
+  // Column filters
+  const [filterRatings, setFilterRatings] = useState<string[]>([]);
+  const [filterStatusIds, setFilterStatusIds] = useState<string[]>([]);
+
+  function setSort(key: SortKey, dir?: 'asc' | 'desc') {
+    if (dir !== undefined) { setSortKey(key); setSortAsc(dir === 'asc'); }
+    else if (sortKey === key) setSortAsc((v) => !v);
     else { setSortKey(key); setSortAsc(key === 'name'); }
   }
 
-  const sorted = [...platforms].sort((a, b) => {
-    let cmp = 0;
-    if (sortKey === 'name') cmp = a.name.localeCompare(b.name);
-    else if (sortKey === 'personal_rating') cmp = (a.personal_rating ?? 0) - (b.personal_rating ?? 0);
-    else if (sortKey === 'jobs_tracked') cmp = (a.jobs_tracked ?? 0) - (b.jobs_tracked ?? 0);
-    else if (sortKey === 'last_application_date') cmp = (a.last_application_date ?? '').localeCompare(b.last_application_date ?? '');
-    return sortAsc ? cmp : -cmp;
-  });
+  const sorted = useMemo(() => {
+    let result = [...platforms];
+    // Apply filters
+    if (filterRatings.length > 0) {
+      result = result.filter((p) => p.personal_rating && filterRatings.includes(String(p.personal_rating)));
+    }
+    if (filterStatusIds.length > 0) {
+      result = result.filter((p) => p.profile_status_id && filterStatusIds.includes(p.profile_status_id));
+    }
+    // Sort
+    result.sort((a, b) => {
+      let cmp = 0;
+      if (sortKey === 'name') cmp = a.name.localeCompare(b.name);
+      else if (sortKey === 'personal_rating') cmp = (a.personal_rating ?? 0) - (b.personal_rating ?? 0);
+      else if (sortKey === 'jobs_tracked') cmp = (a.jobs_tracked ?? 0) - (b.jobs_tracked ?? 0);
+      else if (sortKey === 'last_application_date') cmp = (a.last_application_date ?? '').localeCompare(b.last_application_date ?? '');
+      return sortAsc ? cmp : -cmp;
+    });
+    return result;
+  }, [platforms, sortKey, sortAsc, filterRatings, filterStatusIds]);
+
+  // Derive status options from data
+  const statusOptions: FilterOption[] = useMemo(() => {
+    const seen = new Map<string, string>();
+    for (const p of platforms) {
+      if (p.profile_status_id && p.profile_status) {
+        seen.set(p.profile_status_id, p.profile_status.label);
+      }
+    }
+    return Array.from(seen.entries()).map(([value, label]) => ({ value, label }));
+  }, [platforms]);
+
+  // filterHeader helper
+  function filterHeader(
+    key: SortKey,
+    label: string,
+    className: string,
+    filterOptions?: FilterOption[],
+    selectedValues?: string[],
+    onFilterChange?: (vals: string[]) => void,
+  ) {
+    const dir = sortKey === key ? (sortAsc ? 'asc' as const : 'desc' as const) : null;
+    return (
+      <th scope="col" className={cn('group/th whitespace-nowrap px-4 py-2.5 text-left text-xs font-medium text-text-muted', className)}>
+        <span className="inline-flex items-center gap-0.5">
+          <button type="button" onClick={() => setSort(key)} className="hover:text-text-primary transition-colors">
+            {label}
+          </button>
+          <ColumnFilter
+            label={label}
+            sortDir={dir}
+            onSortAsc={() => setSort(key, 'asc')}
+            onSortDesc={() => setSort(key, 'desc')}
+            options={filterOptions}
+            selectedValues={selectedValues}
+            onFilterChange={onFilterChange}
+            isActive={(selectedValues?.length ?? 0) > 0 || sortKey === key}
+          />
+        </span>
+      </th>
+    );
+  }
 
   async function confirmDelete() {
     if (!deleteTarget) return;
@@ -72,15 +134,6 @@ export function PlatformTable({ platforms, isLoading }: PlatformTableProps) {
       return;
     }
     setDeleteTarget(platform);
-  }
-
-  function SortButton({ label, sortBy }: { label: string; sortBy: SortKey }) {
-    return (
-      <button type="button" onClick={() => toggleSort(sortBy)} className="flex items-center gap-1 text-xs font-medium text-text-muted hover:text-text-primary">
-        {label}
-        <ArrowUpDownIcon className={cn('h-3 w-3', sortKey === sortBy && 'text-brand-500')} />
-      </button>
-    );
   }
 
   if (isLoading) {
@@ -101,15 +154,26 @@ export function PlatformTable({ platforms, isLoading }: PlatformTableProps) {
         <table className="w-full text-sm">
           <thead className="border-b border-border-app bg-surface-muted">
             <tr>
-              <th className="px-4 py-2.5 text-left"><SortButton label="Platform" sortBy="name" /></th>
-              <th className="px-4 py-2.5 text-left text-xs font-medium text-text-muted">Profile Status</th>
-              <th className="hidden px-4 py-2.5 text-left text-xs font-medium text-text-muted md:table-cell">Subscription</th>
-              <th className="hidden px-4 py-2.5 text-left text-xs font-medium text-text-muted lg:table-cell">Login Email</th>
-              <th className="px-4 py-2.5 text-left"><SortButton label="Rating" sortBy="personal_rating" /></th>
-              <th className="px-4 py-2.5 text-right"><SortButton label="Jobs" sortBy="jobs_tracked" /></th>
-              <th className="hidden px-4 py-2.5 text-left md:table-cell"><SortButton label="Last Applied" sortBy="last_application_date" /></th>
-              <th className="px-4 py-2.5 text-left text-xs font-medium text-text-muted">Resume</th>
-              <th className="px-4 py-2.5 text-right text-xs font-medium text-text-muted">Actions</th>
+              {filterHeader('name', 'Platform', 'min-w-[160px]')}
+              <th scope="col" className="group/th px-4 py-2.5 text-left text-xs font-medium text-text-muted">
+                <span className="inline-flex items-center gap-0.5">
+                  Profile Status
+                  <ColumnFilter
+                    label="Profile Status"
+                    options={statusOptions}
+                    selectedValues={filterStatusIds}
+                    onFilterChange={setFilterStatusIds}
+                    isActive={filterStatusIds.length > 0}
+                  />
+                </span>
+              </th>
+              <th scope="col" className="hidden px-4 py-2.5 text-left text-xs font-medium text-text-muted md:table-cell">Subscription</th>
+              <th scope="col" className="hidden px-4 py-2.5 text-left text-xs font-medium text-text-muted lg:table-cell">Login Email</th>
+              {filterHeader('personal_rating', 'Rating', '', RATING_OPTIONS, filterRatings, setFilterRatings)}
+              {filterHeader('jobs_tracked', 'Jobs', 'text-right')}
+              {filterHeader('last_application_date', 'Last Applied', 'hidden md:table-cell')}
+              <th scope="col" className="px-4 py-2.5 text-left text-xs font-medium text-text-muted">Resume</th>
+              <th scope="col" className="px-4 py-2.5 text-right text-xs font-medium text-text-muted">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border-app bg-surface">

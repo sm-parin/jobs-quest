@@ -78,6 +78,12 @@ export type PlatformValues = z.infer<typeof platformSchema>;
 export const contactInputSchema = z.object({
   name: z.string().min(1, 'Name is required').max(100),
   designation: z.string().max(100).optional(),
+  role: z.string().max(100).optional(),
+  platform: z.string().max(100).optional(),
+  contact_methods: z.array(z.object({
+    type: z.string().max(50),
+    value: z.string().max(200),
+  })).optional(),
   email: z.string().email('Invalid email').optional().or(z.literal('')),
   phone: z.string().max(20).optional(),
 });

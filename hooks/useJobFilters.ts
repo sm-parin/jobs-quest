@@ -9,6 +9,7 @@ export interface JobFilters {
   statusIds: string[];
   platformIds: string[];
   priorities: string[];
+  workTypes: string[];
   dateFrom: string;
   dateTo: string;
 }
@@ -18,6 +19,7 @@ const EMPTY_FILTERS: JobFilters = {
   statusIds: [],
   platformIds: [],
   priorities: [],
+  workTypes: [],
   dateFrom: '',
   dateTo: '',
 };
@@ -38,6 +40,7 @@ export function useJobFilters(jobs: Job[]) {
     statusIds: parseArrayParam(searchParams, 'status'),
     platformIds: parseArrayParam(searchParams, 'platform'),
     priorities: parseArrayParam(searchParams, 'priority'),
+    workTypes: parseArrayParam(searchParams, 'type'),
     dateFrom: searchParams.get('from') ?? '',
     dateTo: searchParams.get('to') ?? '',
   }), [searchParams]);
@@ -47,6 +50,7 @@ export function useJobFilters(jobs: Job[]) {
     filters.statusIds.length > 0 ||
     filters.platformIds.length > 0 ||
     filters.priorities.length > 0 ||
+    filters.workTypes.length > 0 ||
     filters.dateFrom !== '' ||
     filters.dateTo !== '',
     [filters],
@@ -77,6 +81,9 @@ export function useJobFilters(jobs: Job[]) {
     if (filters.priorities.length > 0) {
       result = result.filter((j) => filters.priorities.includes(j.priority));
     }
+    if (filters.workTypes.length > 0) {
+      result = result.filter((j) => j.work_type && filters.workTypes.includes(j.work_type));
+    }
     if (filters.dateFrom) {
       result = result.filter(
         (j) => j.stage_date && j.stage_date >= filters.dateFrom,
@@ -106,6 +113,7 @@ export function useJobFilters(jobs: Job[]) {
     params.delete('status');
     params.delete('platform');
     params.delete('priority');
+    params.delete('type');
     params.delete('from');
     params.delete('to');
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });

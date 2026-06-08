@@ -189,6 +189,33 @@ export default function SettingsPage() {
     setSavingEmail(false);
   }
 
+  const [seedingReferral, setSeedingReferral] = useState(false);
+  async function seedReferralStatuses() {
+    const REFERRAL_STATUSES = [
+      { label: 'Referral Requested', color: '#a78bfa' },
+      { label: 'Referred', color: '#818cf8' },
+      { label: 'Referral Accepted', color: '#34d399' },
+      { label: 'Referral Declined', color: '#f87171' },
+    ];
+    setSeedingReferral(true);
+    let added = 0;
+    for (const s of REFERRAL_STATUSES) {
+      const res = await fetch('/api/statuses', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ label: s.label, color: s.color, order: jobStatuses.length + added }),
+      });
+      if (res.ok) {
+        const { data } = await res.json();
+        setJobStatuses((prev) => [...prev, data]);
+        added++;
+      }
+    }
+    setSeedingReferral(false);
+    if (added > 0) toast.success(`Added ${added} referral status${added === 1 ? '' : 'es'}`);
+    else toast.error('No statuses added');
+  }
+
   return (
     <section aria-labelledby="settings-heading">
       <h1 id="settings-heading" className="mb-6 text-2xl font-semibold text-text-primary">Settings</h1>
@@ -201,6 +228,15 @@ export default function SettingsPage() {
         <TabsContent value="job-statuses">
           <p className="mb-4 text-sm text-text-muted">Manage the statuses that appear in your job pipeline. Drag to reorder.</p>
           <StatusList items={jobStatuses} showColor onAdd={addJobStatus} onEdit={editJobStatus} onDelete={deleteJobStatus} onReorder={reorderJobStatuses} />
+          <div className="mt-6 flex items-center gap-3 rounded-md border border-dashed border-border-app p-3">
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-text-primary">Referral Statuses</p>
+              <p className="text-xs text-text-muted">Add preset statuses for tracking referral progress.</p>
+            </div>
+            <Button variant="outline" size="sm" onClick={seedReferralStatuses} disabled={seedingReferral}>
+              {seedingReferral ? 'Adding…' : 'Add referral statuses'}
+            </Button>
+          </div>
         </TabsContent>
         <TabsContent value="platform-statuses">
           <p className="mb-4 text-sm text-text-muted">Manage the profile status options shown in the Platforms page. Drag to reorder.</p>

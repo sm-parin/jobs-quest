@@ -9,8 +9,8 @@ export type SortKey =
   | 'role'
   | 'status'
   | 'platform'
+  | 'work_type'
   | 'stage_date'
-  | 'salary'
   | 'priority'
   | 'updated_at';
 
@@ -63,13 +63,13 @@ export function useJobSort(jobs: Job[]) {
           aVal = (a.platform?.name ?? '').toLowerCase();
           bVal = (b.platform?.name ?? '').toLowerCase();
           break;
+        case 'work_type':
+          aVal = (a.work_type ?? '').toLowerCase();
+          bVal = (b.work_type ?? '').toLowerCase();
+          break;
         case 'stage_date':
           aVal = a.stage_date ?? '';
           bVal = b.stage_date ?? '';
-          break;
-        case 'salary':
-          aVal = (a.salary ?? '').toLowerCase();
-          bVal = (b.salary ?? '').toLowerCase();
           break;
         case 'priority':
           aVal = PRIORITY_ORDER[a.priority] ?? 99;
@@ -89,9 +89,12 @@ export function useJobSort(jobs: Job[]) {
     });
   }, [jobs, currentSort]);
 
-  function setSort(key: SortKey) {
+  function setSort(key: SortKey, forcedDir?: SortDir) {
     const params = new URLSearchParams(searchParams.toString());
-    if (currentSort.key === key) {
+    if (forcedDir !== undefined) {
+      params.set('sort', key);
+      params.set('dir', forcedDir);
+    } else if (currentSort.key === key) {
       if (currentSort.dir === 'asc') {
         params.set('sort', key);
         params.set('dir', 'desc');

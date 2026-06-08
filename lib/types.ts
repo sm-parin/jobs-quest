@@ -88,12 +88,20 @@ export interface Job {
 // ---------------------------------------------------------------------------
 // contacts
 // ---------------------------------------------------------------------------
+export interface ContactMethod {
+  type: string;
+  value: string;
+}
+
 export interface Contact {
   id: string;
   job_id: string;
   user_id: string;
   name: string;
   designation: string | null;
+  role: string | null;
+  platform: string | null;
+  contact_methods: ContactMethod[] | null;
   email: string | null;
   phone: string | null;
   created_at: string;
