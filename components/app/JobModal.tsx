@@ -500,18 +500,23 @@ export function JobModal({ open, onOpenChange, job, initialReminder, userId }: J
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="j-platform">Platform</Label>
-                  <Select value={selectedPlatformValue ?? ''} onValueChange={(v) => {
+                  <Select value={selectedPlatformValue ?? ''} onValueChange={(v: string | null) => {
                     if (v === '__custom__') {
                       // switch to free-text mode
                       setShowCustomPlatform(true);
                       setSelectedPlatformValue(v);
                       setValue('source_platform_id', null);
                       setValue('source', '');
-                    } else {
+                    } else if (v) {
                       setShowCustomPlatform(false);
                       setSelectedPlatformValue(v);
-                      setValue('source_platform_id', v || null);
+                      setValue('source_platform_id', v);
                       // if selecting an existing platform, clear free-text source
+                      setValue('source', null);
+                    } else {
+                      setShowCustomPlatform(false);
+                      setSelectedPlatformValue('');
+                      setValue('source_platform_id', null);
                       setValue('source', null);
                     }
                   }}>
