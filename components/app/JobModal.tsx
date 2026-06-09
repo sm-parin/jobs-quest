@@ -494,7 +494,7 @@ export function JobModal({ open, onOpenChange, job, initialReminder, userId }: J
                   <Label htmlFor="j-platform">Platform</Label>
                   <Combobox
                     options={platforms.map((p) => ({ value: p.id, label: p.name }))}
-                    value={watchPlatformId ?? ''}
+                    value={watchPlatformId ?? getValues('source') ?? ''}
                     onValueChange={(v: string | null) => {
                       if (v) {
                         // Check if it's an existing platform ID
@@ -502,11 +502,12 @@ export function JobModal({ open, onOpenChange, job, initialReminder, userId }: J
                           setValue('source_platform_id', v);
                           setValue('source', null);
                         } else {
-                          // It's custom text
+                          // It's custom text entered by user
                           setValue('source_platform_id', null);
                           setValue('source', v);
                         }
                       } else {
+                        // Cleared
                         setValue('source_platform_id', null);
                         setValue('source', null);
                       }
