@@ -107,6 +107,8 @@ export function useJobFilters(jobs: Job[], reminders: Reminder[] = []) {
     params.delete('priority');
     params.delete('type');
     params.delete('reminder');
+    params.delete('sort');
+    params.delete('dir');
     // date filters removed
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
   }

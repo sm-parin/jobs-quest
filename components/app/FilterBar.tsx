@@ -3,7 +3,6 @@
 import { useCallback, useRef, useState } from 'react';
 import { SearchIcon, XIcon, RotateCcwIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { toast } from 'sonner';
 import { Input } from '@/components/ui/input';
 import type { JobFilters } from '@/hooks/useJobFilters';
 
@@ -68,7 +67,7 @@ export function FilterBar({
           onClick={() => {
             setLocalSearch('');
             onClearFilters();
-            toast.success('Filters cleared');
+            // toast removed: reset should clear filters without extra UI noise
           }}
           className="text-text-muted hover:text-text-primary"
         >
