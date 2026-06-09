@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
-import type { Job, Reminder } from '@/lib/types';
+import type { Job } from '@/lib/types';
 
 export interface JobFilters {
   search: string;
@@ -10,7 +10,6 @@ export interface JobFilters {
   platformIds: string[];
   priorities: string[];
   workTypes: string[];
-  reminder?: string | null;
 }
 
 const EMPTY_FILTERS: JobFilters = {
@@ -27,7 +26,7 @@ function parseArrayParam(params: URLSearchParams, key: string): string[] {
   return val.split(',').filter(Boolean);
 }
 
-export function useJobFilters(jobs: Job[], reminders: Reminder[] = []) {
+export function useJobFilters(jobs: Job[]) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -38,7 +37,6 @@ export function useJobFilters(jobs: Job[], reminders: Reminder[] = []) {
     platformIds: parseArrayParam(searchParams, 'platform'),
     priorities: parseArrayParam(searchParams, 'priority'),
     workTypes: parseArrayParam(searchParams, 'type'),
-    reminder: searchParams.get('reminder'),
     // date filters removed
   }), [searchParams]);
 
@@ -48,7 +46,7 @@ export function useJobFilters(jobs: Job[], reminders: Reminder[] = []) {
     filters.platformIds.length > 0 ||
     filters.priorities.length > 0 ||
     filters.workTypes.length > 0 ||
-    !!filters.reminder,
+    false,
     [filters],
   );
 
@@ -80,12 +78,7 @@ export function useJobFilters(jobs: Job[], reminders: Reminder[] = []) {
     if (filters.workTypes.length > 0) {
       result = result.filter((j) => j.work_type && filters.workTypes.includes(j.work_type));
     }
-    // filter by reminder (e.g., 'today')
-    if (filters.reminder === 'today') {
-      const today = new Date().toISOString().slice(0, 10);
-      const jobIdsWithReminders = new Set(reminders.filter((r) => !r.is_done && r.remind_at === today).map((r) => r.job_id));
-      result = result.filter((j) => jobIdsWithReminders.has(j.id));
-    }
+    // date filters removed
     return result;
   }, [jobs, filters]);
 
@@ -106,7 +99,7 @@ export function useJobFilters(jobs: Job[], reminders: Reminder[] = []) {
     params.delete('platform');
     params.delete('priority');
     params.delete('type');
-    params.delete('reminder');
+    // date filters removed
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
   }
 
