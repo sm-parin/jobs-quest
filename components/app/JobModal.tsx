@@ -518,8 +518,17 @@ export function JobModal({ open, onOpenChange, job, initialReminder, userId }: J
                     }}
                   >
                     <SelectTrigger id="j-platform">
-                      <SelectValue placeholder="Select platform" />
-                    </SelectTrigger>
+                        <span className="flex items-center gap-2 truncate">
+                          {isOtherSelected ? (
+                            <span className="truncate">{otherPlatformText || 'Other'}</span>
+                          ) : watchPlatformId ? (
+                            <span className="truncate">{platforms.find((x) => x.id === watchPlatformId)?.name}</span>
+                          ) : (
+                            <span className="text-muted-foreground">Select platform</span>
+                          )}
+                        </span>
+                        <SelectValue className="sr-only">{platforms.find((x) => x.id === watchPlatformId)?.name ?? ''}</SelectValue>
+                      </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="">None</SelectItem>
                       {platforms.map((p) => (

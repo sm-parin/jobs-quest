@@ -271,7 +271,7 @@ export function JobTable({
           {reminder ? (
             <div className="flex flex-col">
               <span className="text-sm text-text-primary truncate">{reminder.reminder_text ?? 'Reminder'}</span>
-              <span className="text-xs text-text-muted">{reminder.remind_at}</span>
+              <span className="text-xs text-text-muted">{reminder.remind_at ? new Date(reminder.remind_at).toLocaleDateString() : '—'}</span>
             </div>
           ) : (
             <div className="text-xs text-text-muted">—</div>

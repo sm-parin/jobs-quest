@@ -15,7 +15,7 @@ export default async function DashboardPage() {
   const [jobsResult, statusesResult, platformsResult, remindersResult] = await Promise.all([
     supabase
       .from('jobs')
-      .select('*, status:statuses(id,label,color), platform:platforms(id,name), contacts(id,name)')
+      .select('*, status:statuses(id,label,color), platform:platforms(id,name), contacts(id,name), activity_log(id,job_id,user_id,old_status_label,new_status_label,changed_at)')
       .eq('user_id', user.id)
       .eq('is_archived', false)
       .order('updated_at', { ascending: false }),
@@ -31,7 +31,7 @@ export default async function DashboardPage() {
       .order('name', { ascending: true }),
     supabase
       .from('reminders')
-      .select('id,job_id,user_id,remind_at,is_done,created_at,updated_at')
+      .select('id,job_id,user_id,remind_at,reminder_text,is_done,created_at,updated_at')
       .eq('user_id', user.id)
       .eq('is_done', false),
   ]);
