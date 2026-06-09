@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
-import type { Job } from '@/lib/types';
+import type { Job, Reminder } from '@/lib/types';
 
 export type SortKey =
   | 'company'
@@ -11,7 +11,8 @@ export type SortKey =
   | 'platform'
   | 'work_type'
   | 'priority'
-  | 'updated_at';
+  | 'updated_at'
+  | 'reminder';
 
 export type SortDir = 'asc' | 'desc';
 
@@ -26,7 +27,7 @@ const PRIORITY_ORDER: Record<string, number> = {
   low: 3,
 };
 
-export function useJobSort(jobs: Job[]) {
+export function useJobSort(jobs: Job[], reminders: Reminder[] = []) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -46,6 +47,13 @@ export function useJobSort(jobs: Job[]) {
       let bVal: string | number;
 
       switch (key) {
+        case 'reminder': {
+          const map = new Map<string, string | null>();
+          for (const r of reminders) map.set(r.job_id, r.remind_at ?? null);
+          aVal = map.get(a.id) ?? '';
+          bVal = map.get(b.id) ?? '';
+          break;
+        }
         case 'company':
           aVal = a.company.toLowerCase();
           bVal = b.company.toLowerCase();

@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useRef, useState } from 'react';
-import { SearchIcon, XIcon } from 'lucide-react';
+import { SearchIcon, XIcon, RotateCcwIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import type { JobFilters } from '@/hooks/useJobFilters';
@@ -55,6 +55,22 @@ export function FilterBar({
             <XIcon className="h-3.5 w-3.5" />
           </button>
         )}
+      </div>
+
+      {/* Reset filters */}
+      <div className="shrink-0">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => {
+            setLocalSearch('');
+            onClearFilters();
+          }}
+          aria-label="Reset filters"
+          title="Reset filters"
+        >
+          <RotateCcwIcon className="h-4 w-4" />
+        </Button>
       </div>
 
       {/* Date range removed per UX change */}
