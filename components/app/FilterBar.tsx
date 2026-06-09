@@ -57,24 +57,7 @@ export function FilterBar({
         )}
       </div>
 
-      {/* Date range */}
-      <div className="flex items-center gap-1 shrink-0">
-        <Input
-          type="date"
-          value={filters.dateFrom}
-          onChange={(e) => onSetFilter('from', e.target.value || null)}
-          aria-label="Stage date from"
-          className="h-8 w-36 text-xs"
-        />
-        <span className="text-text-muted text-xs">–</span>
-        <Input
-          type="date"
-          value={filters.dateTo}
-          onChange={(e) => onSetFilter('to', e.target.value || null)}
-          aria-label="Stage date to"
-          className="h-8 w-36 text-xs"
-        />
-      </div>
+      {/* Date range removed per UX change */}
 
       {hasActiveFilters && (
         <Button variant="ghost" size="sm" onClick={onClearFilters} className="text-destructive hover:text-destructive shrink-0">

@@ -33,7 +33,7 @@ const PRIORITY_OPTIONS = [
   { value: 'high', label: 'High' },
 ] as const;
 
-const STEP_LABELS = ['Job Details', 'Contacts', 'Stage & Priority'] as const;
+const STEP_LABELS = ['Job Details', 'Contacts', 'Priority'] as const;
 
 interface ContactMethod {
   type: string;
@@ -93,8 +93,6 @@ export function JobModal({ open, onOpenChange, job, initialReminder, userId }: J
       status_id: null,
       priority: 'medium' as const,
       work_type: null,
-      stage_date: '',
-      stage_date_label: '',
       source_platform_id: null,
       source: '',
       salary: '',
@@ -126,8 +124,6 @@ export function JobModal({ open, onOpenChange, job, initialReminder, userId }: J
         status_id: job.status_id ?? null,
         priority: job.priority ?? 'medium',
         work_type: job.work_type ?? null,
-        stage_date: job.stage_date ?? '',
-        stage_date_label: job.stage_date_label ?? '',
         source_platform_id: job.source_platform_id ?? null,
         source: job.source ?? '',
         salary: job.salary ?? '',
@@ -163,8 +159,6 @@ export function JobModal({ open, onOpenChange, job, initialReminder, userId }: J
         status_id: null,
         priority: 'medium',
         work_type: null,
-        stage_date: '',
-        stage_date_label: '',
         source_platform_id: null,
         source: '',
         salary: '',
@@ -191,18 +185,11 @@ export function JobModal({ open, onOpenChange, job, initialReminder, userId }: J
   const watchPlatformId = useWatch({ control, name: 'source_platform_id' });
   const watchWorkType = useWatch({ control, name: 'work_type' });
 
-  // Auto-fill stage fields when status changes
-  useEffect(() => {
-    if (!watchStatusId) return;
-    const status = statuses.find((s) => s.id === watchStatusId);
-    if (!status) return;
-    if (!getValues('stage_date_label')) setValue('stage_date_label', status.label);
-    if (!getValues('stage_date')) setValue('stage_date', new Date().toISOString().slice(0, 10));
-  }, [watchStatusId, statuses, getValues, setValue]);
+  // stage_date and stage_date_label removed from form per UX change
 
   async function handleNext() {
     if (step === 1) {
-      const valid = await trigger(['company', 'role']);
+      const valid = await trigger(['company']);
       if (!valid) return;
     }
     setStep((s) => Math.min(s + 1, STEP_LABELS.length));
@@ -283,15 +270,13 @@ export function JobModal({ open, onOpenChange, job, initialReminder, userId }: J
 
       const payload = {
         company: values.company,
-        role: values.role,
+        role: values.role || null,
         location: values.location || null,
         url: values.url || null,
         job_description: null,
         status_id: values.status_id || null,
         priority: values.priority,
         work_type: values.work_type || null,
-        stage_date: values.stage_date || null,
-        stage_date_label: values.stage_date_label || null,
         source_platform_id: values.source_platform_id || null,
         source: null,
         salary: null,
@@ -708,16 +693,6 @@ export function JobModal({ open, onOpenChange, job, initialReminder, userId }: J
           {/* ── Step 3: Stage & Priority ────────────────────────────────── */}
           {step === 3 && (
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <Label htmlFor="j-stage-label">Stage label</Label>
-                  <Input id="j-stage-label" placeholder="e.g. Applied" {...register('stage_date_label')} />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="j-stage-date">Stage date</Label>
-                  <Input id="j-stage-date" type="date" {...register('stage_date')} />
-                </div>
-              </div>
 
               <div className="space-y-1.5">
                 <Label htmlFor="j-reminder">Follow-up reminder</Label>

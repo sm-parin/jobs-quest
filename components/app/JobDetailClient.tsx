@@ -59,8 +59,7 @@ export function JobDetailClient({ job: initialJob, contacts: initialContacts, ac
   const [notesSaveState, setNotesSaveState] = useState<'idle' | 'saving' | 'saved'>('idle');
   const notesTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const [editingStageDate, setEditingStageDate] = useState(false);
-  const [stageDateValue, setStageDateValue] = useState(job.stage_date ?? '');
+  // stage_date removed from UI
 
   async function saveNotes(value: string) {
     setNotesSaveState('saving');
@@ -85,21 +84,7 @@ export function JobDetailClient({ job: initialJob, contacts: initialContacts, ac
     notesTimeout.current = setTimeout(() => saveNotes(value), 1000);
   }
 
-  async function handleSaveStageDate() {
-    setEditingStageDate(false);
-    if (stageDateValue === job.stage_date) return;
-    const res = await fetch(`/api/jobs/${job.id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ stage_date: stageDateValue || null }),
-    });
-    if (res.ok) {
-      setJob((j) => ({ ...j, stage_date: stageDateValue || null }));
-      updateJobOptimistic(job.id, { stage_date: stageDateValue || null });
-    } else {
-      toast.error('Failed to update stage date');
-    }
-  }
+  // stage_date removed from UI
 
   async function handleArchive() {
     if (!confirm('Archive this job? You can unarchive it from settings.')) return;
@@ -155,27 +140,7 @@ export function JobDetailClient({ job: initialJob, contacts: initialContacts, ac
             </div>
           </div>
 
-          <div className="rounded-xl border border-border-app bg-surface p-6 space-y-3">
-            <h2 className="text-sm font-semibold text-text-primary">Stage &amp; Dates</h2>
-            <div className="flex items-center gap-3">
-              <div className="flex-1">
-                <p className="text-xs text-text-muted mb-0.5">{job.stage_date_label ?? 'Stage date'}</p>
-                {editingStageDate ? (
-                  <div className="flex items-center gap-2">
-                    <Input type="date" value={stageDateValue} onChange={(e) => setStageDateValue(e.target.value)} onBlur={handleSaveStageDate} className="h-8 w-40 text-sm" autoFocus />
-                    <button type="button" onClick={handleSaveStageDate} className="text-brand-500 hover:text-brand-600">
-                      <CheckIcon className="h-4 w-4" />
-                    </button>
-                  </div>
-                ) : (
-                  <button type="button" onClick={() => setEditingStageDate(true)} className="flex items-center gap-1.5 text-sm text-text-primary hover:text-brand-500 group">
-                    {job.stage_date ? formatDate(job.stage_date) : 'No date set'}
-                    <PencilIcon className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
+          {/* Stage & Dates removed per UX change */}
 
           <div className="rounded-xl border border-border-app bg-surface p-6 space-y-3">
             <h2 className="text-sm font-semibold text-text-primary">Details</h2>

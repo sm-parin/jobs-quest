@@ -36,12 +36,7 @@ const PRIORITY_COLOR: Record<string, string> = {
   high: 'var(--color-destructive)',
 };
 
-function formatStageDate(date: string | null, label: string | null): string {
-  if (!date) return '—';
-  const d = new Date(date + 'T00:00:00');
-  const formatted = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-  return label ? `${label} · ${formatted}` : formatted;
-}
+// stage_date and stage_date_label removed from UI
 
 export function JobCard({ job, statuses, reminder, onEdit }: JobCardProps) {
   const router = useRouter();
@@ -175,9 +170,9 @@ export function JobCard({ job, statuses, reminder, onEdit }: JobCardProps) {
         )}
       </div>
 
-      {/* Bottom: stage date + salary */}
+      {/* Bottom: salary */}
       <div className="flex items-center justify-between text-xs text-text-muted">
-        <span>{formatStageDate(job.stage_date, job.stage_date_label)}</span>
+        <span>—</span>
         {job.salary && (
           <span className="truncate max-w-[120px] text-right">{job.salary}</span>
         )}

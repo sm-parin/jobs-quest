@@ -10,8 +10,6 @@ export interface JobFilters {
   platformIds: string[];
   priorities: string[];
   workTypes: string[];
-  dateFrom: string;
-  dateTo: string;
 }
 
 const EMPTY_FILTERS: JobFilters = {
@@ -20,8 +18,6 @@ const EMPTY_FILTERS: JobFilters = {
   platformIds: [],
   priorities: [],
   workTypes: [],
-  dateFrom: '',
-  dateTo: '',
 };
 
 function parseArrayParam(params: URLSearchParams, key: string): string[] {
@@ -41,8 +37,7 @@ export function useJobFilters(jobs: Job[]) {
     platformIds: parseArrayParam(searchParams, 'platform'),
     priorities: parseArrayParam(searchParams, 'priority'),
     workTypes: parseArrayParam(searchParams, 'type'),
-    dateFrom: searchParams.get('from') ?? '',
-    dateTo: searchParams.get('to') ?? '',
+    // date filters removed
   }), [searchParams]);
 
   const hasActiveFilters = useMemo(() =>
@@ -51,8 +46,7 @@ export function useJobFilters(jobs: Job[]) {
     filters.platformIds.length > 0 ||
     filters.priorities.length > 0 ||
     filters.workTypes.length > 0 ||
-    filters.dateFrom !== '' ||
-    filters.dateTo !== '',
+    false,
     [filters],
   );
 
@@ -84,16 +78,7 @@ export function useJobFilters(jobs: Job[]) {
     if (filters.workTypes.length > 0) {
       result = result.filter((j) => j.work_type && filters.workTypes.includes(j.work_type));
     }
-    if (filters.dateFrom) {
-      result = result.filter(
-        (j) => j.stage_date && j.stage_date >= filters.dateFrom,
-      );
-    }
-    if (filters.dateTo) {
-      result = result.filter(
-        (j) => j.stage_date && j.stage_date <= filters.dateTo,
-      );
-    }
+    // date filters removed
     return result;
   }, [jobs, filters]);
 
@@ -114,8 +99,7 @@ export function useJobFilters(jobs: Job[]) {
     params.delete('platform');
     params.delete('priority');
     params.delete('type');
-    params.delete('from');
-    params.delete('to');
+    // date filters removed
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
   }
 

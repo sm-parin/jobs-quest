@@ -71,8 +71,6 @@ export interface Job {
   work_type: 'on-site' | 'remote' | 'hybrid' | null;
   salary: string | null;
   contact_email: string | null;
-  stage_date: string | null;
-  stage_date_label: string | null;
   notes: string | null;
   resume_path: string | null;
   job_description: string | null;
@@ -152,7 +150,6 @@ export interface ActivityLog {
   user_id: string;
   old_status_label: string | null;
   new_status_label: string;
-  stage_date: string | null;
   changed_at: string;
 }
 
@@ -178,9 +175,9 @@ export interface Database {
         Update: { label?: string; color?: string; order?: number; updated_at?: string };
       };
       jobs: {
-        Row: { id: string; user_id: string; company: string; role: string; location: string | null; url: string | null; source: string | null; source_platform_id: string | null; status_id: string | null; priority: Priority; salary: string | null; stage_date: string | null; stage_date_label: string | null; notes: string | null; resume_path: string | null; job_description: string | null; is_archived: boolean; created_at: string; updated_at: string };
-        Insert: { user_id: string; company: string; role: string; location?: string | null; url?: string | null; source?: string | null; source_platform_id?: string | null; status_id?: string | null; priority?: Priority; salary?: string | null; stage_date?: string | null; stage_date_label?: string | null; notes?: string | null; resume_path?: string | null; job_description?: string | null; is_archived?: boolean };
-        Update: { company?: string; role?: string; location?: string | null; url?: string | null; source?: string | null; source_platform_id?: string | null; status_id?: string | null; priority?: Priority; salary?: string | null; stage_date?: string | null; stage_date_label?: string | null; notes?: string | null; resume_path?: string | null; job_description?: string | null; is_archived?: boolean; updated_at?: string };
+        Row: { id: string; user_id: string; company: string; role: string; location: string | null; url: string | null; source: string | null; source_platform_id: string | null; status_id: string | null; priority: Priority; salary: string | null; notes: string | null; resume_path: string | null; job_description: string | null; is_archived: boolean; created_at: string; updated_at: string };
+        Insert: { user_id: string; company: string; role: string; location?: string | null; url?: string | null; source?: string | null; source_platform_id?: string | null; status_id?: string | null; priority?: Priority; salary?: string | null; notes?: string | null; resume_path?: string | null; job_description?: string | null; is_archived?: boolean };
+        Update: { company?: string; role?: string; location?: string | null; url?: string | null; source?: string | null; source_platform_id?: string | null; status_id?: string | null; priority?: Priority; salary?: string | null; notes?: string | null; resume_path?: string | null; job_description?: string | null; is_archived?: boolean; updated_at?: string };
       };
       contacts: {
         Row: { id: string; job_id: string; user_id: string; name: string; designation: string | null; email: string | null; phone: string | null; created_at: string; updated_at: string };
@@ -193,8 +190,8 @@ export interface Database {
         Update: { remind_at?: string; is_done?: boolean; updated_at?: string };
       };
       activity_log: {
-        Row: { id: string; job_id: string; user_id: string; old_status_label: string | null; new_status_label: string; stage_date: string | null; changed_at: string };
-        Insert: { job_id: string; user_id: string; old_status_label?: string | null; new_status_label: string; stage_date?: string | null };
+        Row: { id: string; job_id: string; user_id: string; old_status_label: string | null; new_status_label: string; changed_at: string };
+        Insert: { job_id: string; user_id: string; old_status_label?: string | null; new_status_label: string };
         Update: Record<string, never>;
       };
     };

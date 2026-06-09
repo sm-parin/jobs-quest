@@ -54,16 +54,7 @@ const PRIORITY_OPTIONS: FilterOption[] = [
   { value: 'low', label: 'Low', color: 'var(--color-text-muted)' },
 ];
 
-function formatStageDate(date: string | null, label: string | null): string {
-  if (!date && !label) return '—';
-  const parts: string[] = [];
-  if (label) parts.push(label);
-  if (date) {
-    const d = new Date(date + 'T00:00:00');
-    parts.push(`${d.toLocaleString('en-US', { month: 'short' })} ${d.getDate()}`);
-  }
-  return parts.join(' · ');
-}
+// stage_date and stage_date_label removed from UI
 
 export function JobTable({
   initialJobs,
@@ -274,12 +265,9 @@ export function JobTable({
           )}
         </td>
 
-        {/* Stage + Reminder combined */}
+        {/* Reminder */}
         <td className="w-[160px] px-3 py-3">
           <div className="flex items-center gap-1.5">
-            <span className="text-xs text-text-muted truncate">
-              {formatStageDate(job.stage_date, job.stage_date_label)}
-            </span>
             {reminder ? (
               <span
                 title={isOverdue ? `Overdue since ${reminder.remind_at}` : `Follow up by ${reminder.remind_at}`}
@@ -417,7 +405,7 @@ export function JobTable({
                   filters.workTypes,
                   (vals) => setFilter('type', vals.join(',') || null),
                 )}
-                {filterHeader('stage_date', 'Stage / Reminder', 'w-[160px]')}
+                <th scope="col" className="w-[160px] px-3 py-3 text-left text-xs font-semibold uppercase tracking-widest text-text-muted">Reminder</th>
                 <th scope="col" className="w-12 px-3 py-2.5 text-center text-xs font-semibold uppercase tracking-widest text-text-muted">
                   <PaperclipIcon className="inline-block h-3.5 w-3.5" aria-hidden />
                   <span className="sr-only">Resume</span>
@@ -428,7 +416,7 @@ export function JobTable({
             <tbody>
               {shouldVirtualize ? (
                 <tr style={{ height: `${rowVirtualizer.getTotalSize()}px`, position: 'relative' }}>
-                  <td colSpan={9} className="p-0">
+                  <td colSpan={8} className="p-0">
                     {rowVirtualizer.getVirtualItems().map((virtualRow) => {
                       const job = sortedJobs[virtualRow.index];
                       return (

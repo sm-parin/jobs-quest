@@ -10,7 +10,6 @@ export type SortKey =
   | 'status'
   | 'platform'
   | 'work_type'
-  | 'stage_date'
   | 'priority'
   | 'updated_at';
 
@@ -66,10 +65,6 @@ export function useJobSort(jobs: Job[]) {
         case 'work_type':
           aVal = (a.work_type ?? '').toLowerCase();
           bVal = (b.work_type ?? '').toLowerCase();
-          break;
-        case 'stage_date':
-          aVal = a.stage_date ?? '';
-          bVal = b.stage_date ?? '';
           break;
         case 'priority':
           aVal = PRIORITY_ORDER[a.priority] ?? 99;

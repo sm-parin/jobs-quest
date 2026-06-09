@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
 const JOB_SELECT =
-  'id, user_id, company, role, location, url, source, source_platform_id, status_id, priority, salary, stage_date, stage_date_label, notes, resume_path, job_description, is_archived, created_at, updated_at, status:statuses(id, label, color), platform:platforms(id, name)';
+  'id, user_id, company, role, location, url, source, source_platform_id, status_id, priority, salary, notes, resume_path, job_description, is_archived, created_at, updated_at, status:statuses(id, label, color), platform:platforms(id, name)';
 
 export async function GET() {
   const supabase = await createClient();

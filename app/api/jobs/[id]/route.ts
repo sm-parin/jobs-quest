@@ -7,7 +7,7 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 const JOB_SELECT = `
   id, user_id, company, role, location, url, source, source_platform_id,
   status_id, priority, work_type, salary, contact_email,
-  stage_date, stage_date_label, notes,
+  notes,
   resume_path, job_description, is_archived, created_at, updated_at,
   status:statuses(id, label, color),
   platform:platforms(id, name),
@@ -47,7 +47,7 @@ export async function PATCH(
 
   const { data: current } = await supabase
     .from('jobs')
-    .select('status_id, stage_date, stage_date_label, status:statuses(label)')
+    .select('status_id, status:statuses(label)')
     .eq('id', id)
     .eq('user_id', user.id)
     .single();
@@ -69,16 +69,11 @@ export async function PATCH(
   const patch: Record<string, unknown> = { ...parsed.data };
   if (resume_path !== undefined) patch.resume_path = resume_path;
 
-  const today = new Date().toISOString().split('T')[0];
   const statusChanged = 'status_id' in patch && patch.status_id !== current.status_id;
 
   if (statusChanged) {
-    if (!patch.stage_date && !current.stage_date) {
-      patch.stage_date = today;
-    }
-
-    let newStatusLabel = (patch.stage_date_label as string | undefined) ?? null;
-    if (patch.status_id && !newStatusLabel) {
+    let newStatusLabel: string | null = null;
+    if (patch.status_id) {
       const { data: s } = await supabase
         .from('statuses')
         .select('label')
@@ -86,7 +81,6 @@ export async function PATCH(
         .single();
       newStatusLabel = s?.label ?? null;
     }
-    patch.stage_date_label = newStatusLabel;
 
     const currentLabel = Array.isArray(current.status)
       ? (current.status as { label: string }[])[0]?.label ?? null
@@ -98,7 +92,6 @@ export async function PATCH(
         user_id: user.id,
         old_status_label: currentLabel,
         new_status_label: newStatusLabel,
-        stage_date: (patch.stage_date as string | undefined) ?? current.stage_date ?? null,
       });
     }
   }

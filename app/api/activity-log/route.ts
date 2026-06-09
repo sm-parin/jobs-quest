@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { activityLogSchema } from '@/lib/schemas';
 
-const LOG_SELECT = 'id, job_id, old_status_label, new_status_label, stage_date, changed_at';
+const LOG_SELECT = 'id, job_id, old_status_label, new_status_label, changed_at';
 
 export async function GET(request: NextRequest) {
   const supabase = await createClient();
@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const { job_id, old_status_label, new_status_label, stage_date } = parsed.data;
+  const { job_id, old_status_label, new_status_label } = parsed.data;
 
   // Validate job ownership
   const { data: job } = await supabase
@@ -89,7 +89,6 @@ export async function POST(request: NextRequest) {
       user_id: user.id,
       old_status_label: old_status_label ?? null,
       new_status_label,
-      stage_date: stage_date ?? null,
     })
     .select(LOG_SELECT)
     .single();

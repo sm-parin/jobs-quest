@@ -100,12 +100,7 @@ export function ActivityLogTimeline({
                 <time dateTime={entry.changed_at} className="text-xs text-text-muted">
                   {formatDateTime(entry.changed_at)}
                 </time>
-                {entry.stage_date && (
-                  <div className="mt-1 inline-flex items-center gap-1 rounded-full border border-border-app px-2 py-0.5 text-xs text-text-muted">
-                    <CalendarIcon className="h-3 w-3" aria-hidden="true" />
-                    {formatDate(entry.stage_date)}
-                  </div>
-                )}
+                {/* stage_date removed from activity entries */}
               </div>
             </li>
           ))}

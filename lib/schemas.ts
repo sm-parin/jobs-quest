@@ -39,7 +39,7 @@ export type UpdatePasswordValues = z.infer<typeof updatePasswordSchema>;
 
 export const jobSchema = z.object({
   company: z.string().min(1, 'Company is required').max(200),
-  role: z.string().min(1, 'Role is required').max(200),
+  role: z.string().max(200).or(z.literal('')).optional().nullable(),
   status_id: z.string().uuid().nullable().optional(),
   priority: z.enum(PRIORITIES).default('medium'),
   work_type: z.enum(['on-site', 'remote', 'hybrid']).nullable().optional(),
@@ -49,8 +49,7 @@ export const jobSchema = z.object({
   source_platform_id: z.string().uuid().nullable().optional(),
   salary: z.string().max(100).nullable().optional(),
   contact_email: z.string().email('Enter a valid email').or(z.literal('')).nullable().optional(),
-  stage_date: z.string().nullable().optional(),
-  stage_date_label: z.string().max(50).nullable().optional(),
+  // stage_date and stage_date_label removed per UX change
   notes: z.string().max(5000).nullable().optional(),
   job_description: z.string().max(10000).nullable().optional(),
   is_archived: z.boolean().default(false),
@@ -99,6 +98,6 @@ export const activityLogSchema = z.object({
   job_id: z.string().uuid('job_id must be a valid UUID'),
   old_status_label: z.string().nullable().optional(),
   new_status_label: z.string().min(1, 'new_status_label is required'),
-  stage_date: z.string().optional().nullable(),
+  // stage_date removed per UX change
 });
 export type ActivityLogValues = z.infer<typeof activityLogSchema>;

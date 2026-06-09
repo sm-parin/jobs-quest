@@ -42,7 +42,7 @@ export default async function JobDetailPage({ params, searchParams }: PageProps)
       .eq('job_id', id),
     supabase
       .from('activity_log')
-      .select('id,job_id,user_id,old_status_label,new_status_label,stage_date,changed_at', { count: 'exact' })
+      .select('id,job_id,user_id,old_status_label,new_status_label,changed_at', { count: 'exact' })
       .eq('job_id', id)
       .order('changed_at', { ascending: false })
       .limit(5),
@@ -63,7 +63,7 @@ export default async function JobDetailPage({ params, searchParams }: PageProps)
   const reminder = reminderResult.data as unknown as Reminder | null;
 
   const backSearchParams = new URLSearchParams();
-  const keepKeys = ['q', 'status', 'platform', 'priority', 'from', 'to', 'sort', 'dir'];
+  const keepKeys = ['q', 'status', 'platform', 'priority', 'sort', 'dir'];
   for (const key of keepKeys) {
     if (backParams[key]) backSearchParams.set(key, backParams[key]);
   }

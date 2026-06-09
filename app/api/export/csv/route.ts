@@ -15,7 +15,7 @@ function csvField(value: string | null | undefined): string {
 
 const HEADERS = [
   'Company', 'Role', 'Location', 'Status', 'Priority', 'Platform',
-  'Source (manual)', 'Salary', 'Stage Date', 'Stage Date Label', 'Job URL',
+  'Source (manual)', 'Salary', 'Job URL',
   'Is Archived', 'Date Created', 'Last Updated',
   'Contact 1 Name', 'Contact 1 Designation', 'Contact 1 Email', 'Contact 1 Phone',
   'Contact 2 Name', 'Contact 2 Designation', 'Contact 2 Email', 'Contact 2 Phone',
@@ -34,7 +34,7 @@ export async function GET() {
     company: string; role: string; location: string | null;
     status: { label: string } | null; priority: string;
     platform: { name: string } | null; source: string | null;
-    salary: string | null; stage_date: string | null; stage_date_label: string | null;
+    salary: string | null;
     url: string | null; is_archived: boolean; created_at: string; updated_at: string;
     notes: string | null; job_description: string | null;
     contacts: Array<{ name: string; designation: string | null; email: string | null; phone: string | null }>;
@@ -44,7 +44,7 @@ export async function GET() {
     .from('jobs')
     .select(
       'company, role, location, status:statuses(label), priority, platform:platforms(name), ' +
-      'source, salary, stage_date, stage_date_label, url, is_archived, created_at, updated_at, ' +
+      'source, salary, url, is_archived, created_at, updated_at, ' +
       'notes, job_description, contacts(name, designation, email, phone)',
     )
     .eq('user_id', user.id)
@@ -72,8 +72,6 @@ export async function GET() {
       job.platform?.name ?? null,
       job.source,
       job.salary,
-      job.stage_date,
-      job.stage_date_label,
       job.url,
       job.is_archived ? 'Yes' : 'No',
       job.created_at,

@@ -5,7 +5,7 @@ import { jobSchema } from '@/lib/schemas';
 const JOB_SELECT = `
   id, user_id, company, role, location, url, source, source_platform_id,
   status_id, priority, work_type, salary, contact_email,
-  stage_date, stage_date_label, notes,
+  notes,
   resume_path, job_description, is_archived, created_at, updated_at,
   status:statuses(id, label, color),
   platform:platforms(id, name),
@@ -45,11 +45,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Validation failed', details: parsed.error.flatten() }, { status: 400 });
   }
 
-  const today = new Date().toISOString().split('T')[0];
-  const { stage_date, status_id, stage_date_label, resume_path, ...jobFields } = parsed.data;
+  const { status_id, resume_path, ...jobFields } = parsed.data;
 
-  let statusLabel = stage_date_label ?? null;
-  if (status_id && !statusLabel) {
+  // Determine status label for activity log if status provided
+  let statusLabel: string | null = null;
+  if (status_id) {
     const { data: s } = await supabase
       .from('statuses')
       .select('label')
@@ -64,8 +64,6 @@ export async function POST(request: NextRequest) {
       user_id: user.id,
       ...jobFields,
       status_id: status_id ?? null,
-      stage_date: stage_date || today,
-      stage_date_label: statusLabel,
       resume_path: (body.resume_path as string | undefined) ?? null,
     })
     .select(JOB_SELECT)
@@ -79,7 +77,6 @@ export async function POST(request: NextRequest) {
       user_id: user.id,
       old_status_label: null,
       new_status_label: statusLabel,
-      stage_date: job.stage_date ?? null,
     });
   }
 

@@ -29,14 +29,10 @@ export function StatusPopover({ jobId, currentStatusId, statuses }: StatusPopove
     setOpen(false);
 
     const job = jobs.find((j) => j.id === jobId);
-    const today = new Date().toISOString().slice(0, 10);
-    const stage_date = job?.stage_date || today;
 
     updateJobOptimistic(jobId, {
       status_id: status.id,
       status: { id: status.id, label: status.label, color: status.color },
-      stage_date_label: status.label,
-      stage_date,
     });
 
     setLoading(true);
@@ -44,11 +40,7 @@ export function StatusPopover({ jobId, currentStatusId, statuses }: StatusPopove
       const res = await fetch(`/api/jobs/${jobId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          status_id: status.id,
-          stage_date_label: status.label,
-          stage_date,
-        }),
+        body: JSON.stringify({ status_id: status.id }),
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
@@ -57,8 +49,6 @@ export function StatusPopover({ jobId, currentStatusId, statuses }: StatusPopove
           updateJobOptimistic(jobId, {
             status_id: job.status_id,
             status: job.status,
-            stage_date_label: job.stage_date_label,
-            stage_date: job.stage_date,
           });
         }
       }
