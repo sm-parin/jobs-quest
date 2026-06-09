@@ -113,40 +113,37 @@ export function Combobox({
 
       {/* Dropdown menu */}
       {showDropdown && (
-        <>
-          {/* Backdrop to close dropdown */}
-          <div
-            className="fixed inset-0 z-40"
-            onClick={() => setOpen(false)}
-          />
-
-          {/* Options list */}
-          <div className="absolute top-full left-0 right-0 z-50 mt-1 max-h-64 overflow-y-auto rounded-lg border border-border-app bg-surface shadow-md">
-            {inputValue === '' ? (
-              // Show all options when input is empty
-              options.map((opt) => (
-                <button
-                  key={opt.value}
-                  onMouseDown={() => handleSelect(opt)}
-                  className="w-full text-left px-3 py-2 text-sm hover:bg-surface-muted transition-colors border-b border-border-app/50 last:border-0"
-                >
-                  {opt.label}
-                </button>
-              ))
-            ) : (
-              // Show filtered options
-              filtered.map((opt) => (
-                <button
-                  key={opt.value}
-                  onMouseDown={() => handleSelect(opt)}
-                  className="w-full text-left px-3 py-2 text-sm hover:bg-surface-muted transition-colors border-b border-border-app/50 last:border-0"
-                >
-                  {opt.label}
-                </button>
-              ))
-            )}
-          </div>
-        </>
+        <div className="absolute top-full left-0 right-0 z-50 mt-1 max-h-64 overflow-y-auto rounded-lg border border-border-app bg-surface shadow-md">
+          {inputValue === '' ? (
+            // Show all options when input is empty
+            options.map((opt) => (
+              <button
+                key={opt.value}
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  handleSelect(opt);
+                }}
+                className="w-full text-left px-3 py-2 text-sm hover:bg-surface-muted transition-colors border-b border-border-app/50 last:border-0"
+              >
+                {opt.label}
+              </button>
+            ))
+          ) : (
+            // Show filtered options
+            filtered.map((opt) => (
+              <button
+                key={opt.value}
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  handleSelect(opt);
+                }}
+                className="w-full text-left px-3 py-2 text-sm hover:bg-surface-muted transition-colors border-b border-border-app/50 last:border-0"
+              >
+                {opt.label}
+              </button>
+            ))
+          )}
+        </div>
       )}
     </div>
   );
