@@ -61,7 +61,7 @@ interface JobModalProps {
 export function JobModal({ open, onOpenChange, job, initialReminder, userId }: JobModalProps) {
   const isEdit = !!job;
   const { statuses, addJobOptimistic, updateJobOptimistic, fetchJobs } = useJobStore();
-  const { platforms } = usePlatformStore();
+  const { platforms, fetchPlatforms } = usePlatformStore();
   const supabase = createClient();
 
   const [step, setStep] = useState(1);
@@ -177,6 +177,13 @@ export function JobModal({ open, onOpenChange, job, initialReminder, userId }: J
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, job]);
+
+  // Fetch platforms when modal opens
+  useEffect(() => {
+    if (open && platforms.length === 0) {
+      fetchPlatforms();
+    }
+  }, [open, fetchPlatforms, platforms.length]);
 
   const watchStatusId = useWatch({ control, name: 'status_id' });
   const watchUrl = useWatch({ control, name: 'url' });
