@@ -34,9 +34,10 @@ export function FilterBar({
   );
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      {/* Search */}
-      <div className="relative flex-1 max-w-sm min-w-48">
+    <div className="flex items-center gap-2">
+      <div className="flex-1 flex items-center gap-2">
+        {/* Search */}
+        <div className="relative flex-1 max-w-sm min-w-48">
         <SearchIcon className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-text-muted pointer-events-none" />
         <Input
           value={localSearch}
@@ -55,15 +56,19 @@ export function FilterBar({
             <XIcon className="h-3.5 w-3.5" />
           </button>
         )}
+        </div>
       </div>
 
-      {/* Date range removed per UX change */}
-
-      {hasActiveFilters && (
-        <Button variant="ghost" size="sm" onClick={onClearFilters} className="text-destructive hover:text-destructive shrink-0">
-          Clear all
+      {/* Reset button at extreme right */}
+      <div className="ml-auto">
+        <Button variant="ghost" size="sm" onClick={() => { setLocalSearch(''); onClearFilters(); }} className="text-text-muted hover:text-text-primary">
+          <span className="sr-only">Reset filters</span>
+          {/* anticlockwise arrow */}
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v6h6M20 20a8 8 0 10-8 8" transform="rotate(-45 12 12)" />
+          </svg>
         </Button>
-      )}
+      </div>
     </div>
   );
 }
