@@ -1,8 +1,9 @@
 'use client';
 
 import { useCallback, useRef, useState } from 'react';
-import { SearchIcon, XIcon } from 'lucide-react';
+import { SearchIcon, XIcon, RotateCcwIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 import { Input } from '@/components/ui/input';
 import type { JobFilters } from '@/hooks/useJobFilters';
 
@@ -61,12 +62,18 @@ export function FilterBar({
 
       {/* Reset button at extreme right */}
       <div className="ml-auto">
-        <Button variant="ghost" size="sm" onClick={() => { setLocalSearch(''); onClearFilters(); }} className="text-text-muted hover:text-text-primary">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => {
+            setLocalSearch('');
+            onClearFilters();
+            toast.success('Filters cleared');
+          }}
+          className="text-text-muted hover:text-text-primary"
+        >
           <span className="sr-only">Reset filters</span>
-          {/* anticlockwise arrow */}
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v6h6M20 20a8 8 0 10-8 8" transform="rotate(-45 12 12)" />
-          </svg>
+          <RotateCcwIcon className="h-4 w-4" />
         </Button>
       </div>
     </div>

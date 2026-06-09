@@ -383,24 +383,12 @@ export function JobTable({
                   filters.workTypes,
                   (vals) => setFilter('type', vals.join(',') || null),
                 )}
-                <th scope="col" className="w-[200px] px-3 py-3 text-left text-xs font-semibold uppercase tracking-widest text-text-muted">
-                  <span className="inline-flex items-center gap-1">
-                    <button
-                      type="button"
-                      onClick={() => setSort('reminder')}
-                      className="hover:text-text-primary transition-colors"
-                    >
-                      Reminder
-                    </button>
-                    <ColumnFilter
-                      label="Reminder"
-                      options={[{ value: 'today', label: 'Today' }]}
-                      selectedValues={filters.reminder ? [filters.reminder] : []}
-                      onFilterChange={(vals) => setFilter('reminder', vals.join(',') || null)}
-                      isActive={!!filters.reminder}
-                    />
-                  </span>
-                </th>
+                {filterHeader(
+                  'reminder', 'Reminder', 'w-[200px]',
+                  [{ value: 'today', label: 'Today' }], 'reminder',
+                  filters.reminder ? [filters.reminder] : [],
+                  (vals) => setFilter('reminder', vals.join(',') || null),
+                )}
                 <th scope="col" className="w-12 px-3 py-2.5 text-center text-xs font-semibold uppercase tracking-widest text-text-muted">Resume</th>
                 <th scope="col" className="w-28 px-3 py-2.5 text-xs font-medium text-text-muted">Actions</th>
               </tr>
