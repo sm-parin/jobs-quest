@@ -24,6 +24,7 @@ export function Combobox({
 }: ComboboxProps) {
   const [open, setOpen] = React.useState(false);
   const [inputValue, setInputValue] = React.useState('');
+  const [dropdownPosition, setDropdownPosition] = React.useState({ top: 0, left: 0, width: 0 });
   const containerRef = React.useRef<HTMLDivElement>(null);
   const inputRef = React.useRef<HTMLInputElement>(null);
 
@@ -71,6 +72,15 @@ export function Combobox({
 
   const handleFocus = () => {
     setOpen(true);
+    // Calculate dropdown position
+    if (inputRef.current) {
+      const rect = inputRef.current.getBoundingClientRect();
+      setDropdownPosition({
+        top: rect.bottom + 4,
+        left: rect.left,
+        width: rect.width,
+      });
+    }
   };
 
   const handleBlur = () => {
@@ -85,11 +95,6 @@ export function Combobox({
       // Confirm current value and close
       setOpen(false);
     }
-  };
-
-  const handleClear = () => {
-    setInputValue('');
-    onValueChange(null);
   };
 
   return (
@@ -111,9 +116,16 @@ export function Combobox({
         <ChevronDownIcon className="absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 opacity-50 pointer-events-none" />
       </div>
 
-      {/* Dropdown menu */}
+      {/* Dropdown menu - using fixed positioning to escape modal clipping */}
       {showDropdown && (
-        <div className="absolute top-full left-0 right-0 z-50 mt-1 max-h-64 overflow-y-auto rounded-lg border border-border-app bg-surface shadow-md">
+        <div
+          className="fixed z-50 max-h-64 overflow-y-auto rounded-lg border border-border-app bg-surface shadow-md"
+          style={{
+            top: `${dropdownPosition.top}px`,
+            left: `${dropdownPosition.left}px`,
+            width: `${dropdownPosition.width}px`,
+          }}
+        >
           {inputValue === '' ? (
             // Show all options when input is empty
             options.map((opt) => (
