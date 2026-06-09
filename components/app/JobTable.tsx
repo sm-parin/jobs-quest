@@ -213,28 +213,29 @@ export function JobTable({
           'focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-500',
         )}
       >
-        {/* Priority dot */}
-        <td className="w-8 px-3 py-3 text-center">
-          <span
-            title={`${job.priority} priority`}
-            className="inline-block h-2 w-2 rounded-full"
-            style={{ backgroundColor: PRIORITY_COLOR[job.priority] }}
-          />
+        {/* Company + Role stacked */}
+        <td className="min-w-[240px] px-3 py-3 max-w-[320px]">
+          <div className="flex flex-col">
+            <span className="font-medium text-sm text-text-primary truncate">{job.company}</span>
+            <span className="text-sm text-text-muted truncate" title={job.role}>{job.role ?? '—'}</span>
+          </div>
         </td>
 
-        {/* Company */}
-        <td className="min-w-[160px] px-3 py-3">
-          <span className="font-medium text-sm text-text-primary">{job.company}</span>
-        </td>
-
-        {/* Role */}
-        <td className="min-w-[180px] flex-1 px-3 py-3 max-w-[260px]">
-          <span className="block truncate text-sm text-text-primary" title={job.role}>{job.role}</span>
-        </td>
-
-        {/* Status */}
-        <td className="w-[140px] px-3 py-3" onClick={(e) => e.stopPropagation()}>
-          <StatusPopover jobId={job.id} currentStatusId={job.status_id} statuses={effectiveStatuses} />
+        {/* Status + timestamp */}
+        <td className="w-[160px] px-3 py-3" onClick={(e) => e.stopPropagation()}>
+          <div className="flex flex-col">
+            <div className="whitespace-nowrap">
+              <StatusPopover jobId={job.id} currentStatusId={job.status_id} statuses={effectiveStatuses} />
+            </div>
+            <div className="text-xs text-text-muted mt-1">
+              {(() => {
+                const logs = (job as any).activity_log as { changed_at: string }[] | undefined;
+                if (!logs || logs.length === 0) return '—';
+                const latest = logs.reduce((a, b) => (a.changed_at > b.changed_at ? a : b));
+                return new Date(latest.changed_at).toLocaleDateString();
+              })()}
+            </div>
+          </div>
         </td>
 
         {/* Platform */}
@@ -265,25 +266,16 @@ export function JobTable({
           )}
         </td>
 
-        {/* Reminder */}
-        <td className="w-[160px] px-3 py-3">
-          <div className="flex items-center gap-1.5">
-            {reminder ? (
-              <span
-                title={isOverdue ? `Overdue since ${reminder.remind_at}` : `Follow up by ${reminder.remind_at}`}
-                className="shrink-0"
-              >
-                <BellRingIcon
-                  className={cn(
-                    'h-3.5 w-3.5',
-                    isOverdue ? 'text-destructive animate-pulse' : 'text-brand-500',
-                  )}
-                />
-              </span>
-            ) : (
-              <BellIcon className="h-3.5 w-3.5 text-text-muted opacity-20 shrink-0" />
-            )}
-          </div>
+        {/* Reminder text + date */}
+        <td className="w-[200px] px-3 py-3">
+          {reminder ? (
+            <div className="flex flex-col">
+              <span className="text-sm text-text-primary truncate">{reminder.reminder_text ?? 'Reminder'}</span>
+              <span className="text-xs text-text-muted">{reminder.remind_at}</span>
+            </div>
+          ) : (
+            <div className="text-xs text-text-muted">—</div>
+          )}
         </td>
 
         {/* Resume */}
@@ -372,23 +364,9 @@ export function JobTable({
             <caption className="sr-only">Job applications</caption>
             <thead className="sticky top-0 z-10 bg-surface-muted border-b border-border-app">
               <tr>
-                {/* Priority dot — with filter */}
-                <th scope="col" className="group/th w-8 px-3 py-2.5 text-center text-xs font-semibold uppercase tracking-widest text-text-muted">
-                  <span className="inline-flex items-center justify-center">
-                    <span className="sr-only">Priority</span>
-                    <ColumnFilter
-                      label="Priority"
-                      options={PRIORITY_OPTIONS}
-                      selectedValues={filters.priorities}
-                      onFilterChange={(vals) => setFilter('priority', vals.join(',') || null)}
-                      isActive={filters.priorities.length > 0}
-                    />
-                  </span>
-                </th>
-                {filterHeader('company', 'Company', 'min-w-[160px]')}
-                {filterHeader('role', 'Role', 'min-w-[180px]')}
+                {filterHeader('company', 'Company', 'min-w-[240px]')}
                 {filterHeader(
-                  'status', 'Status', 'w-[140px]',
+                  'status', 'Status', 'w-[160px]',
                   statusOptions, 'status',
                   filters.statusIds,
                   (vals) => setFilter('status', vals.join(',') || null),
@@ -405,11 +383,8 @@ export function JobTable({
                   filters.workTypes,
                   (vals) => setFilter('type', vals.join(',') || null),
                 )}
-                <th scope="col" className="w-[160px] px-3 py-3 text-left text-xs font-semibold uppercase tracking-widest text-text-muted">Reminder</th>
-                <th scope="col" className="w-12 px-3 py-2.5 text-center text-xs font-semibold uppercase tracking-widest text-text-muted">
-                  <PaperclipIcon className="inline-block h-3.5 w-3.5" aria-hidden />
-                  <span className="sr-only">Resume</span>
-                </th>
+                <th scope="col" className="w-[200px] px-3 py-3 text-left text-xs font-semibold uppercase tracking-widest text-text-muted">Reminder</th>
+                <th scope="col" className="w-12 px-3 py-2.5 text-center text-xs font-semibold uppercase tracking-widest text-text-muted">Resume</th>
                 <th scope="col" className="w-28 px-3 py-2.5 text-xs font-medium text-text-muted">Actions</th>
               </tr>
             </thead>

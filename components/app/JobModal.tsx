@@ -69,6 +69,7 @@ export function JobModal({ open, onOpenChange, job, initialReminder, userId }: J
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [removeResume, setRemoveResume] = useState(false);
   const [reminderDate, setReminderDate] = useState('');
+  const [reminderText, setReminderText] = useState('');
   const [otherPlatformText, setOtherPlatformText] = useState('');
   const [isOtherSelected, setIsOtherSelected] = useState(false);
   const resumeInputRef = useRef<HTMLInputElement>(null);
@@ -113,6 +114,7 @@ export function JobModal({ open, onOpenChange, job, initialReminder, userId }: J
     setReminderDate(
       initialReminder && !initialReminder.is_done ? initialReminder.remind_at : '',
     );
+    setReminderText(initialReminder?.reminder_text ?? '');
 
     if (job) {
       reset({
@@ -362,22 +364,25 @@ export function JobModal({ open, onOpenChange, job, initialReminder, userId }: J
 
   async function saveReminder(jobId: string, existing: Reminder | null) {
     if (!reminderDate && !existing) return;
-    if (reminderDate && existing && !existing.is_done && existing.remind_at === reminderDate) return;
+    if (reminderDate && existing && !existing.is_done && existing.remind_at === reminderDate && existing.reminder_text === reminderText) return;
 
     if (reminderDate) {
       if (existing && !existing.is_done) {
         await fetch(`/api/reminders/${existing.id}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ remind_at: reminderDate }),
+          body: JSON.stringify({ remind_at: reminderDate, reminder_text: reminderText }),
         });
       } else {
         await fetch('/api/reminders', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ job_id: jobId, remind_at: reminderDate }),
+          body: JSON.stringify({ job_id: jobId, remind_at: reminderDate, reminder_text: reminderText }),
         });
       }
+    } else if (!reminderDate && existing && existing.id) {
+      // If reminder was cleared, delete it
+      await fetch(`/api/reminders/${existing.id}`, { method: 'DELETE' });
     }
   }
 
@@ -696,12 +701,22 @@ export function JobModal({ open, onOpenChange, job, initialReminder, userId }: J
 
               <div className="space-y-1.5">
                 <Label htmlFor="j-reminder">Follow-up reminder</Label>
-                <Input
-                  id="j-reminder"
-                  type="date"
-                  value={reminderDate}
-                  onChange={(e) => setReminderDate(e.target.value)}
-                />
+                <div className="flex gap-2 items-start">
+                  <Input
+                    id="j-reminder"
+                    type="date"
+                    value={reminderDate}
+                    onChange={(e) => setReminderDate(e.target.value)}
+                    className="w-36"
+                  />
+                  <Input
+                    id="j-reminder-text"
+                    placeholder="Reminder text"
+                    value={reminderText}
+                    onChange={(e) => setReminderText(e.target.value)}
+                    className="flex-1"
+                  />
+                </div>
                 <p className="text-xs text-text-muted">
                   You&apos;ll be reminded to follow up on this date.
                 </p>

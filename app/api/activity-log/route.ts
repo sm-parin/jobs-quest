@@ -89,6 +89,7 @@ export async function POST(request: NextRequest) {
       user_id: user.id,
       old_status_label: old_status_label ?? null,
       new_status_label,
+      changed_at: new Date().toISOString(),
     })
     .select(LOG_SELECT)
     .single();

@@ -81,6 +81,7 @@ export interface Job {
   status?: Pick<Status, 'id' | 'label' | 'color'>;
   platform?: Pick<Platform, 'id' | 'name'>;
   contacts?: Contact[];
+  activity_log?: ActivityLog[];
 }
 
 // ---------------------------------------------------------------------------
@@ -114,6 +115,7 @@ export interface Reminder {
   job_id: string;
   user_id: string;
   remind_at: string;
+  reminder_text?: string | null;
   is_done: boolean;
   created_at: string;
   updated_at: string;
@@ -185,9 +187,9 @@ export interface Database {
         Update: { name?: string; designation?: string | null; email?: string | null; phone?: string | null; updated_at?: string };
       };
       reminders: {
-        Row: { id: string; job_id: string; user_id: string; remind_at: string; is_done: boolean; created_at: string; updated_at: string };
-        Insert: { job_id: string; user_id: string; remind_at: string; is_done?: boolean };
-        Update: { remind_at?: string; is_done?: boolean; updated_at?: string };
+        Row: { id: string; job_id: string; user_id: string; remind_at: string; reminder_text?: string | null; is_done: boolean; created_at: string; updated_at: string };
+        Insert: { job_id: string; user_id: string; remind_at: string; reminder_text?: string | null; is_done?: boolean };
+        Update: { remind_at?: string; reminder_text?: string | null; is_done?: boolean; updated_at?: string };
       };
       activity_log: {
         Row: { id: string; job_id: string; user_id: string; old_status_label: string | null; new_status_label: string; changed_at: string };

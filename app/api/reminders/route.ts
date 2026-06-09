@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
 const REMINDER_SELECT =
-  'id, job_id, user_id, remind_at, is_done, created_at, updated_at, job:jobs(company, role, status:statuses(label, color))';
+  'id, job_id, user_id, remind_at, reminder_text, is_done, created_at, updated_at, job:jobs(company, role, status:statuses(label, color))';
 
 export async function GET(req: NextRequest) {
   const supabase = await createClient();
@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Content-Type must be application/json' }, { status: 415 });
   }
   const body = await req.json().catch(() => ({}));
-  const { job_id, remind_at } = body;
+  const { job_id, remind_at, reminder_text } = body;
 
   if (!job_id || !remind_at) {
     return NextResponse.json(
@@ -96,7 +96,7 @@ export async function POST(req: NextRequest) {
 
   const { data, error } = await supabase
     .from('reminders')
-    .insert({ job_id, remind_at, user_id: user.id, is_done: false })
+    .insert({ job_id, remind_at, reminder_text: reminder_text ?? null, user_id: user.id, is_done: false })
     .select(REMINDER_SELECT)
     .single();
 

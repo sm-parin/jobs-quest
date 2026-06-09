@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 const REMINDER_SELECT =
-  'id, job_id, user_id, remind_at, is_done, created_at, updated_at, job:jobs(company, role, status:statuses(label, color))';
+  'id, job_id, user_id, remind_at, reminder_text, is_done, created_at, updated_at, job:jobs(company, role, status:statuses(label, color))';
 
 interface Params {
   params: Promise<{ id: string }>;
@@ -22,6 +22,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   const allowed: Record<string, unknown> = {};
   if (body.remind_at !== undefined) allowed.remind_at = body.remind_at;
   if (body.is_done !== undefined) allowed.is_done = body.is_done;
+  if (body.reminder_text !== undefined) allowed.reminder_text = body.reminder_text;
 
   const { data, error } = await supabase
     .from('reminders')

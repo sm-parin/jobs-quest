@@ -11,7 +11,8 @@ const JOB_SELECT = `
   resume_path, job_description, is_archived, created_at, updated_at,
   status:statuses(id, label, color),
   platform:platforms(id, name),
-  contacts(id, job_id, user_id, name, designation, email, phone, created_at, updated_at)
+  contacts(id, job_id, user_id, name, designation, email, phone, created_at, updated_at),
+  activity_log(id, job_id, user_id, old_status_label, new_status_label, changed_at)
 `;
 
 export async function GET(
@@ -92,6 +93,7 @@ export async function PATCH(
         user_id: user.id,
         old_status_label: currentLabel,
         new_status_label: newStatusLabel,
+        changed_at: new Date().toISOString(),
       });
     }
   }
