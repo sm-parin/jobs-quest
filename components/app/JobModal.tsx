@@ -25,7 +25,6 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Combobox, type ComboboxOption } from '@/components/ui/combobox';
 import { cn } from '@/lib/utils';
 
 const PRIORITY_OPTIONS = [
@@ -70,6 +69,8 @@ export function JobModal({ open, onOpenChange, job, initialReminder, userId }: J
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [removeResume, setRemoveResume] = useState(false);
   const [reminderDate, setReminderDate] = useState('');
+  const [otherPlatformText, setOtherPlatformText] = useState('');
+  const [isOtherSelected, setIsOtherSelected] = useState(false);
   const resumeInputRef = useRef<HTMLInputElement>(null);
 
   const {
@@ -109,6 +110,8 @@ export function JobModal({ open, onOpenChange, job, initialReminder, userId }: J
     setStep(1);
     setResumeFile(null);
     setRemoveResume(false);
+    setOtherPlatformText('');
+    setIsOtherSelected(false);
     setReminderDate(
       initialReminder && !initialReminder.is_done ? initialReminder.remind_at : '',
     );
@@ -133,6 +136,11 @@ export function JobModal({ open, onOpenChange, job, initialReminder, userId }: J
         resume: null,
         is_archived: job.is_archived,
       });
+      // If the job has a custom source (no source_platform_id), set otherPlatformText and isOtherSelected
+      if (job.source && !job.source_platform_id) {
+        setOtherPlatformText(job.source);
+        setIsOtherSelected(true);
+      }
       setContacts(
         job.contacts
           ? job.contacts.map((c) => ({
@@ -492,28 +500,50 @@ export function JobModal({ open, onOpenChange, job, initialReminder, userId }: J
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="j-platform">Platform</Label>
-                  <Combobox
-                    options={platforms.map((p) => ({ value: p.id, label: p.name }))}
-                    value={watchPlatformId ?? getValues('source') ?? ''}
-                    onValueChange={(v: string | null) => {
-                      if (v) {
-                        // Check if it's an existing platform ID
-                        if (platforms.some((p) => p.id === v)) {
-                          setValue('source_platform_id', v);
-                          setValue('source', null);
-                        } else {
-                          // It's custom text entered by user
-                          setValue('source_platform_id', null);
-                          setValue('source', v);
-                        }
+                  <Select
+                    value={watchPlatformId || (isOtherSelected ? 'other' : '')}
+                    onValueChange={(v) => {
+                      if (v === 'other') {
+                        setIsOtherSelected(true);
+                        setValue('source_platform_id', null);
+                        setValue('source', null);
+                      } else if (v) {
+                        setIsOtherSelected(false);
+                        setOtherPlatformText('');
+                        setValue('source_platform_id', v);
+                        setValue('source', null);
                       } else {
-                        // Cleared
+                        setIsOtherSelected(false);
+                        setOtherPlatformText('');
                         setValue('source_platform_id', null);
                         setValue('source', null);
                       }
                     }}
-                    placeholder="Select or type platform..."
-                  />
+                  >
+                    <SelectTrigger id="j-platform">
+                      <SelectValue placeholder="Select platform" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">None</SelectItem>
+                      {platforms.map((p) => (
+                        <SelectItem key={p.id} value={p.id}>
+                          {p.name}
+                        </SelectItem>
+                      ))}
+                      <SelectItem value="other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {isOtherSelected && (
+                    <Input
+                      placeholder="Enter platform name"
+                      value={otherPlatformText}
+                      onChange={(e) => {
+                        setOtherPlatformText(e.target.value);
+                        setValue('source', e.target.value);
+                      }}
+                      className="mt-2"
+                    />
+                  )}
                 </div>
               </div>
 
